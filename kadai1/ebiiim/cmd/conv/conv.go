@@ -21,9 +21,9 @@ type ImgConv struct {
 }
 
 // Convert an image file.
-// 1. check file paths
-// 2. open the source file and decode it
-// 3. encode the image with the target format and write it to the target file
+// 1. checks file paths
+// 2. opens the source file and decodes it
+// 3. encodes the image with the target format and writes it to the target file
 func (ic *ImgConv) Convert() error {
 
 	// verify file paths

@@ -15,7 +15,7 @@ const usageTgtExt = `target extension (jpg, png, tiff, bmp)`
 
 // Usage string
 const Usage = `Usage:
-  imgconv DIR [-source_ext=<ext>] [-target_ext=<ext>]
+  imgconv [-source_ext=<ext>] [-target_ext=<ext>] DIR
 Arguments:
   -source_ext=<ext>` + "\t" + usageSrcExt + ` [default: jpg]
   -target_ext=<ext>` + "\t" + usageTgtExt + ` [default: png]`
@@ -40,7 +40,7 @@ type Result struct {
 // DirConv run an imgconv command.
 // 1. traverses dirs
 // 2. converts files
-// 3. shows log and returns results
+// 3. shows logs and returns results
 func (cli Cli) DirConv() []Result {
 	var results []Result
 
@@ -49,7 +49,7 @@ func (cli Cli) DirConv() []Result {
 		fmt.Println(Usage)
 		os.Exit(0)
 	}
-
+	fmt.Println(cli)
 	// get file paths to convert
 	files, err := cli.traverseImageFiles()
 	if err != nil {
@@ -93,7 +93,7 @@ func (cli *Cli) traverseImageFiles() (files []string, err error) {
 	return
 }
 
-// NewCli initializes imgconv cli.
+// NewCli initializes imgconv dirconv.
 func NewCli() (cli *Cli) {
 	srcExt := flag.String("source_ext", "jpg", usageSrcExt)
 	tgtExt := flag.String("target_ext", "png", usageTgtExt)
