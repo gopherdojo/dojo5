@@ -21,13 +21,12 @@ type ImgConv struct {
 }
 
 // Convert an image file.
-// 1. checks file paths
-// 2. opens the source file and decodes it
-// 3. encodes the image with the target format and writes it to the target file
+// 1. opens the source file and decodes it
+// 2. encodes the image with the target format and writes it to the target file
 func (ic *ImgConv) Convert() error {
 
-	// verify file paths
-	srcFile, err := os.Open(ic.SrcPath)
+	// load the source image
+	srcFile, err := os.OpenFile(ic.SrcPath, os.O_RDONLY, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to open: %s", ic.SrcPath)
 	}
@@ -38,6 +37,12 @@ func (ic *ImgConv) Convert() error {
 		}
 	}()
 
+	srcImg, err := decodeImg(srcFile)
+	if err != nil {
+		return fmt.Errorf("failed to decode: %s", ic.SrcPath)
+	}
+
+	// write encoded image to the target file
 	tgtFile, err := os.Create(ic.TgtPath)
 	if err != nil {
 		return fmt.Errorf("failed to create : %s", ic.TgtPath)
@@ -49,15 +54,12 @@ func (ic *ImgConv) Convert() error {
 		}
 	}()
 
-	// load the source image
-	srcImg, err := decodeImg(srcFile)
-	if err != nil {
-		return fmt.Errorf("failed to decode: %s", ic.SrcPath)
-	}
-
-	// write encoded image to the target file
 	err = encodeImg(tgtFile, &srcImg)
 	if err != nil {
+		rErr := os.Remove(ic.TgtPath)
+		if rErr != nil {
+			err = fmt.Errorf("failed to remove: %v (%v)", rErr, err)
+		}
 		return fmt.Errorf("failed to encode: %s", ic.SrcPath)
 	}
 
