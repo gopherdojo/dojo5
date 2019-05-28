@@ -49,7 +49,7 @@ func (cli Cli) DirConv() []Result {
 		fmt.Println(Usage)
 		os.Exit(0)
 	}
-	fmt.Println(cli)
+
 	// get file paths to convert
 	files, err := cli.traverseImageFiles()
 	if err != nil {
@@ -94,11 +94,17 @@ func (cli *Cli) traverseImageFiles() (files []string, err error) {
 }
 
 // NewCli initializes imgconv dirconv.
-func NewCli() (cli *Cli) {
-	srcExt := flag.String("source_ext", "jpg", usageSrcExt)
-	tgtExt := flag.String("target_ext", "png", usageTgtExt)
-	flag.Parse()
-	dir := flag.Arg(0) // get the first dir name only
+func NewCli(args []string) (cli *Cli) {
+	flags := flag.NewFlagSet(args[0], flag.ExitOnError)
+	var (
+		srcExt = flags.String("source_ext", "jpg", usageSrcExt)
+		tgtExt = flags.String("target_ext", "png", usageTgtExt)
+	)
+	err := flags.Parse(args[1:])
+	if err != nil {
+		panic(err)
+	}
+	dir := flags.Arg(0) // get the first dir name only
 
 	formatExt(srcExt)
 	formatExt(tgtExt)

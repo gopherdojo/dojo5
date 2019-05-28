@@ -1,7 +1,11 @@
 package main
 
-import "./dirconv"
+import (
+	"os"
+
+	"../cmd/dirconv"
+)
 
 func main() {
-	dirconv.NewCli().DirConv()
+	dirconv.NewCli(os.Args).DirConv()
 }
