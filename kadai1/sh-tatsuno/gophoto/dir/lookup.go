@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 )
 
+// Lookup lookup directory to find image files
 func Lookup(dir string, ext string, pathList []string) ([]string, error) {
 
 	fileInfos, err := ioutil.ReadDir(dir)
@@ -26,9 +27,7 @@ func Lookup(dir string, ext string, pathList []string) ([]string, error) {
 		}
 
 		// check if the postfix is equal to the input format
-		r := []rune(path)
-		postfix := r[len(r)-len([]rune(ext)) : len(r)]
-		if string(postfix) == ext {
+		if filepath.Ext(path) == ext {
 			pathList = append(pathList, path)
 		}
 	}
