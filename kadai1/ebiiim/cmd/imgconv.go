@@ -1,9 +1,7 @@
 package main
 
-import (
-	"./cli"
-)
+import "./cli"
 
 func main() {
-	cli.Run()
+	dirconv.NewCli().DirConv()
 }
