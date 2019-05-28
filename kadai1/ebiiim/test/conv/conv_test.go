@@ -1,0 +1,64 @@
+package conv
+
+import (
+	"os"
+	"testing"
+
+	"../../cmd/conv"
+)
+
+func TestImgConv_Convert(t *testing.T) {
+	const (
+		f1 = "../testdata/gopherA.jpg"
+		f2 = "../testdata/gopherA.png"
+		f3 = "../testdata/gopherA.bmp"
+		f4 = "../testdata/gopherA.tiff"
+
+		n1 = "../testdata/dummy.jpg"
+		n2 = "../testdata/dummy.png"
+
+		e1 = "unexpected behavior"
+	)
+
+	defer func() {
+		os.Remove(f2)
+		os.Remove(f3)
+		os.Remove(f4)
+	}()
+
+	var (
+		ic  conv.ImgConv
+		err error
+	)
+
+	// normal: jpg -> png
+	ic = conv.ImgConv{SrcPath: f1, TgtPath: f2, Options: nil}
+	err = ic.Convert()
+	if err != nil {
+		t.Errorf(e1)
+		err = nil
+	}
+
+	// normal: png -> bmp
+	ic = conv.ImgConv{SrcPath: f2, TgtPath: f3, Options: nil}
+	err = ic.Convert()
+	if err != nil {
+		t.Errorf(e1)
+		err = nil
+	}
+
+	// normal: bmp -> tiff
+	ic = conv.ImgConv{SrcPath: f3, TgtPath: f4, Options: nil}
+	err = ic.Convert()
+	if err != nil {
+		t.Errorf(e1)
+		err = nil
+	}
+
+	// non-normal: jpg -> png
+	ic = conv.ImgConv{SrcPath: n1, TgtPath: n2, Options: nil}
+	err = ic.Convert()
+	if err == nil {
+		t.Errorf(e1)
+	}
+}
