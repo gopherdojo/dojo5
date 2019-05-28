@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"../conv"
+	"github.com/gopherdojo/dojo5/kadai1/ebiiim/cmd/conv"
 )
 
 const usageSrcExt = `source extension (jpg, png, tiff, bmp)`

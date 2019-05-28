@@ -3,7 +3,7 @@ package dirconv
 import (
 	"testing"
 
-	"../../cmd/dirconv"
+	"github.com/gopherdojo/dojo5/kadai1/ebiiim/cmd/dirconv"
 )
 
 func check(t *testing.T, got interface{}, want interface{}) {

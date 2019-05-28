@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"../../cmd/conv"
+	"github.com/gopherdojo/dojo5/kadai1/ebiiim/cmd/conv"
 )
 
 func TestImgConv_Convert(t *testing.T) {
