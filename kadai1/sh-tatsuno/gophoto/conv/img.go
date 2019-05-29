@@ -24,9 +24,6 @@ func NewImg(path string) (*Img, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err != nil {
-		return nil, err
-	}
 	img, _, err := image.Decode(file)
 	if err != nil {
 		return nil, err
