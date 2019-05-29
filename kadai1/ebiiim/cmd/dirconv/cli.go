@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/gopherdojo/dojo5/kadai1/ebiiim/cmd/conv"
 )
@@ -32,15 +33,20 @@ type Cli struct {
 
 // Result struct
 type Result struct {
-	Index   int
+	// this value is usually not continuous because DirConv uses goroutine
+	Index int
+	// relative path from the dir passed to args
 	RelPath string
-	IsOk    bool
+	// if err == nil then true
+	IsOk bool
 }
 
 // DirConv run an imgconv command.
-// 1. traverses dirs
-// 2. converts files
-// 3. shows logs and returns results
+//   1. traverses dirs
+//   2. converts files
+//   3. shows logs and returns results
+// Returns a list of results likes:
+//   [{0 dummy.jpg false} {2 dirA/figB.jpg true} {1 figA.jpg true} ...]
 func (cli Cli) DirConv() []Result {
 	var results []Result
 
@@ -56,27 +62,33 @@ func (cli Cli) DirConv() []Result {
 		panic(err)
 	}
 
-	// TODO: goroutine
+	// convert files (goroutined)
+	wg := &sync.WaitGroup{}
 	for i, v := range files {
-		oldFileName := fmt.Sprintf("%s/%s", cli.Dir, v)
-		newFileName := oldFileName[0:len(oldFileName)-len(cli.SrcExt)] + cli.TgtExt
-		log := fmt.Sprintf("%s -> %s", oldFileName, newFileName)
+		wg.Add(1)
+		go func(idx int, val string) {
+			defer wg.Done()
+			oldFileName := fmt.Sprintf("%s/%s", cli.Dir, val)
+			newFileName := oldFileName[0:len(oldFileName)-len(cli.SrcExt)] + cli.TgtExt
+			log := fmt.Sprintf("%s -> %s", oldFileName, newFileName)
 
-		ic := conv.ImgConv{SrcPath: oldFileName, TgtPath: newFileName}
-		err := ic.Convert()
+			ic := conv.ImgConv{SrcPath: oldFileName, TgtPath: newFileName}
+			err := ic.Convert()
 
-		ok := true
-		if err != nil {
-			ok = false
-			_, _ = fmt.Fprintln(os.Stderr, err)
-			log = fmt.Sprintf("[Failed] %s", log)
-		} else {
-			log = fmt.Sprintf("[OK] %s", log)
-		}
+			ok := true
+			if err != nil {
+				ok = false
+				_, _ = fmt.Fprintln(os.Stderr, err)
+				log = fmt.Sprintf("[Failed] %s", log)
+			} else {
+				log = fmt.Sprintf("[OK] %s", log)
+			}
 
-		results = append(results, Result{Index: i, RelPath: v, IsOk: ok})
-		fmt.Println(log)
+			results = append(results, Result{Index: idx, RelPath: val, IsOk: ok})
+			fmt.Println(log)
+		}(i, v)
 	}
+	wg.Wait()
 
 	return results
 }
