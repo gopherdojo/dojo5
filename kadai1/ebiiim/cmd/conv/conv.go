@@ -15,14 +15,17 @@ import (
 
 // ImgConv struct holds two paths and options.
 type ImgConv struct {
+	// source path e.g. `path/to/A.jpg`
 	SrcPath string
+	// target path e.g. `path/to/A.png`
 	TgtPath string
+	// converter options (not implemented)
 	Options map[string]interface{}
 }
 
 // Convert an image file.
-// 1. opens the source file and decodes it
-// 2. encodes the image with the target format and writes it to the target file
+//   1. opens the source file and decodes it
+//   2. encodes the image with the target format and writes it to the target file
 func (ic *ImgConv) Convert() error {
 
 	// load the source image
@@ -67,7 +70,7 @@ func (ic *ImgConv) Convert() error {
 }
 
 func encodeImg(file *os.File, img *image.Image) (err error) {
-	// TODO: encoder options
+	// TODO: apply encoder options
 	fileN := file.Name()
 	fileE := strings.ToLower(filepath.Ext(fileN))
 	switch fileE {
