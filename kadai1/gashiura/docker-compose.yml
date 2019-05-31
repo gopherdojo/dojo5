@@ -1,0 +1,11 @@
+version: '3'
+services:
+  app:
+    container_name: golang
+    image: golang:latest
+    volumes:
+      - ./src:/go/src
+    ports:
+      - "8080:8080"
+      - "6060:6060"
+    tty: true
