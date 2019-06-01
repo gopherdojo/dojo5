@@ -2,8 +2,12 @@ ROOT=github.com/gopherdojo/dojo5/kadai1/ebiiim
 MAIN=cmd/imgconv.go
 TEST=test/...
 
+CMD_ALL=all
 CMD_BUILD=build
 CMD_TEST=test
+
+.PHONY: ${CMD_ALL}
+${CMD_ALL}: ${CMD_TEST} ${CMD_BUILD}
 
 .PHONY: ${CMD_BUILD}
 ${CMD_BUILD}: ${MAIN}

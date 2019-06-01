@@ -10,8 +10,16 @@ Arguments:
   -target_ext=<ext>     target extension (jpg, png, tiff, bmp) [default: png]
 ```
 
-## Build
+## Development
+
+### Build
 
 ```bash
-make
+make build
+```
+
+## Test
+
+```bash
+make test
 ```
