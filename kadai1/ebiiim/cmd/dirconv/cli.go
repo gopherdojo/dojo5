@@ -59,7 +59,8 @@ func (cli Cli) DirConv() []Result {
 	// get file paths to convert
 	files, err := cli.traverseImageFiles()
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		os.Exit(0)
 	}
 
 	// convert files (goroutined)
@@ -93,7 +94,22 @@ func (cli Cli) DirConv() []Result {
 	return results
 }
 
-func (cli *Cli) traverseImageFiles() (files []string, err error) {
+func (cli *Cli) traverseImageFiles() ([]string, error) {
+	var (
+		files []string
+		err   error
+	)
+
+	// check the dir exists
+	fileInfo, err := os.Stat(cli.Dir)
+	if err != nil {
+		return files, err // if the dir does not exist, return an empty slice
+	}
+	if !fileInfo.IsDir() {
+		return files, fmt.Errorf("%s is not a directory", cli.Dir)
+	}
+
+	// traverse the dir and return a list of image files has the given file extension
 	err = filepath.Walk(cli.Dir,
 		func(path string, info os.FileInfo, err error) error {
 			relPath, err := filepath.Rel(cli.Dir, path)
@@ -102,7 +118,7 @@ func (cli *Cli) traverseImageFiles() (files []string, err error) {
 			}
 			return nil
 		})
-	return
+	return files, err
 }
 
 // NewCli initializes a Cli struct with given args.

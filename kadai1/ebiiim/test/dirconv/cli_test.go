@@ -26,7 +26,11 @@ func TestNewCli2(t *testing.T) {
 	check(t, *cli, dirconv.Cli{Dir: "../../testdata", SrcExt: ".png", TgtExt: ".tiff"})
 }
 
-//func TestCli_DirConv(t *testing.T) {
-//	args := []string{"imgconv", "../../testdata"}
-//	dirconv.NewCli(args).DirConv() // FIXME: nil pointer dereference
-//}
+func TestCli_DirConv(t *testing.T) {
+	args := []string{"imgconv", "../testdata"}
+	results := dirconv.NewCli(args).DirConv()
+	check(t, results, []dirconv.Result{
+		{Index: 0, RelPath: "dummy.jpg", IsOk: false},
+		{Index: 1, RelPath: "gopherA.jpg", IsOk: true},
+	})
+}
