@@ -1,4 +1,4 @@
-package conv
+package conv_test
 
 import (
 	"os"
@@ -36,7 +36,6 @@ func TestImgConv_Convert(t *testing.T) {
 	err = ic.Convert()
 	if err != nil {
 		t.Errorf(e1)
-		err = nil
 	}
 
 	// normal: png -> bmp
@@ -44,7 +43,6 @@ func TestImgConv_Convert(t *testing.T) {
 	err = ic.Convert()
 	if err != nil {
 		t.Errorf(e1)
-		err = nil
 	}
 
 	// normal: bmp -> tiff
@@ -52,7 +50,6 @@ func TestImgConv_Convert(t *testing.T) {
 	err = ic.Convert()
 	if err != nil {
 		t.Errorf(e1)
-		err = nil
 	}
 
 	// non-normal: jpg -> png

@@ -1,6 +1,7 @@
-package dirconv
+package dirconv_test
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/gopherdojo/dojo5/kadai1/ebiiim/cmd/dirconv"
@@ -28,9 +29,12 @@ func TestNewCli2(t *testing.T) {
 
 func TestCli_DirConv(t *testing.T) {
 	args := []string{"imgconv", "../testdata"}
-	results := dirconv.NewCli(args).DirConv()
-	check(t, results, []dirconv.Result{
+	got := dirconv.NewCli(args).DirConv()
+	want := []dirconv.Result{
 		{Index: 0, RelPath: "dummy.jpg", IsOk: false},
 		{Index: 1, RelPath: "gopherA.jpg", IsOk: true},
-	})
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got: %v, want %v", got, want)
+	}
 }
