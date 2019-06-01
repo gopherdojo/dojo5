@@ -121,7 +121,7 @@ func NewCli(args []string) (cli *Cli) {
 	formatExt(srcExt)
 	formatExt(tgtExt)
 
-	cli = &Cli{dir, *srcExt, *tgtExt}
+	cli = &Cli{Dir: dir, SrcExt: *srcExt, TgtExt: *tgtExt}
 	return
 }
 
