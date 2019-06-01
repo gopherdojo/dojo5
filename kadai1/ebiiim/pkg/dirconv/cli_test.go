@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gopherdojo/dojo5/kadai1/ebiiim/cmd/dirconv"
+	"github.com/gopherdojo/dojo5/kadai1/ebiiim/pkg/dirconv"
 )
 
 func check(t *testing.T, got interface{}, want interface{}) {

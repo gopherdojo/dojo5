@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/gopherdojo/dojo5/kadai1/ebiiim/cmd/dirconv"
+	"github.com/gopherdojo/dojo5/kadai1/ebiiim/pkg/dirconv"
 )
 
 func main() {

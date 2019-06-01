@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/gopherdojo/dojo5/kadai1/ebiiim/cmd/conv"
+	"github.com/gopherdojo/dojo5/kadai1/ebiiim/pkg/conv"
 )
 
 const usageSrcExt = `source extension (jpg, png, tiff, bmp)`

@@ -1,6 +1,6 @@
 ROOT=github.com/gopherdojo/dojo5/kadai1/ebiiim
 MAIN=cmd/imgconv.go
-TEST=test/...
+TEST=pkg/...
 
 CMD_ALL=all
 CMD_BUILD=build
@@ -15,4 +15,4 @@ ${CMD_BUILD}: ${MAIN}
 
 .PHONY: ${CMD_TEST}
 ${CMD_TEST}:
-	go test ${ROOT}/${TEST}
+	go test -cover ${ROOT}/${TEST}
