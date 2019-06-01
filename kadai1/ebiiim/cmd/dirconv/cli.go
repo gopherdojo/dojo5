@@ -41,7 +41,7 @@ type Result struct {
 	IsOk bool
 }
 
-// DirConv run an imgconv command.
+// DirConv runs an imgconv command (parsed by NewCli()).
 //   1. traverses dirs
 //   2. converts files
 //   3. shows logs and returns results
@@ -105,7 +105,7 @@ func (cli *Cli) traverseImageFiles() (files []string, err error) {
 	return
 }
 
-// NewCli initializes imgconv dirconv.
+// NewCli initializes a Cli struct with given args.
 func NewCli(args []string) (cli *Cli) {
 	flags := flag.NewFlagSet(args[0], flag.ExitOnError)
 	var (

@@ -13,13 +13,13 @@ import (
 	"golang.org/x/image/tiff"
 )
 
-// ImgConv struct holds two paths and options.
+// ImgConv struct holds two paths and converter options.
 type ImgConv struct {
 	// source path e.g. `path/to/A.jpg`
 	SrcPath string
 	// target path e.g. `path/to/A.png`
 	TgtPath string
-	// converter options (not implemented)
+	// converter options (currently, this value is not interpreted by encodeImg())
 	Options map[string]interface{}
 }
 
@@ -29,7 +29,7 @@ type ImgConv struct {
 func (ic *ImgConv) Convert() error {
 
 	// load the source image
-	srcFile, err := os.OpenFile(ic.SrcPath, os.O_RDONLY, 0644)
+	srcFile, err := os.OpenFile(ic.SrcPath, os.O_RDONLY, 0600)
 	if err != nil {
 		return fmt.Errorf("failed to open: %s", ic.SrcPath)
 	}
@@ -57,7 +57,7 @@ func (ic *ImgConv) Convert() error {
 		}
 	}()
 
-	err = encodeImg(tgtFile, &srcImg)
+	err = encodeImg(tgtFile, &srcImg, ic.Options)
 	if err != nil {
 		rErr := os.Remove(ic.TgtPath)
 		if rErr != nil {
@@ -69,16 +69,17 @@ func (ic *ImgConv) Convert() error {
 	return nil
 }
 
-func encodeImg(file *os.File, img *image.Image) (err error) {
-	// TODO: apply encoder options
+func encodeImg(file *os.File, img *image.Image, options map[string]interface{}) (err error) {
 	fileN := file.Name()
 	fileE := strings.ToLower(filepath.Ext(fileN))
 	switch fileE {
 	case ".jpg", ".jpeg":
+		// TODO: apply encoder options
 		err = jpeg.Encode(file, *img, &jpeg.Options{})
 	case ".png":
 		err = png.Encode(file, *img)
 	case ".tiff":
+		// TODO: apply encoder options
 		err = tiff.Encode(file, *img, &tiff.Options{})
 	case ".bmp":
 		err = bmp.Encode(file, *img)
