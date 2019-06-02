@@ -118,5 +118,5 @@ func encode(tgt *os.File, decodedImg image.Image) (err error) {
 		err = bmp.Encode(tgt, decodedImg)
 	}
 
-	return err
+	return
 }

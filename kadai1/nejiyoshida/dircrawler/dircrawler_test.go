@@ -1,8 +1,6 @@
 package dircrawler
 
 import (
-	//"fmt"
-
 	"fmt"
 	"reflect"
 	"testing"
