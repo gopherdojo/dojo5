@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/lfcd85/dojo5/kadai1/lfcd85/imgconv"
+	"github.com/gopherdojo/dojo5/kadai1/lfcd85/imgconv"
 )
 
 func main() {
