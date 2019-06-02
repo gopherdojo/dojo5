@@ -31,5 +31,7 @@ make
     - しかし、filepath.Walk 内で呼び出せる関数が [WalkFunc](https://golang.org/pkg/path/filepath/#WalkFunc) に限定されているようで、かつ WalkFunc の型が決まっていたので少し使い辛かった。
     - 一方で、これは[先月の Software Design](https://gihyo.jp/magazine/SD/archive/2019/201905) で見た Generator Pattern を試すと Go らしくなるのでは考えた。
     - [同じことを考える人](https://gist.github.com/sethamclean/9475737)が既に居たので、参考にした。
-- flag パッケージに少し使い辛さを感じる。
-    - 特に、フラグ無し引数が一つ入ると以降のフラグも全て Parse できなくなるのが少し使いづらい。
+- ~~flag パッケージに少し使い辛さを感じる。~~
+    - ~~特に、フラグ無し引数が一つ入ると以降のフラグも全て Parse できなくなるのが少し使いづらい。~~
+    - sh-tatsuno さんのコードで使われていた [NewFlagSet](https://golang.org/pkg/flag/#NewFlagSet) を使うともっと柔軟な操作が可能になるようでした。
+    勉強になりました。
