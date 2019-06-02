@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"myConverter/args"
 	"myConverter/converter"
 	"myConverter/walker"
@@ -14,7 +15,10 @@ func execute(filePath string, decodeType string, encodeType string) {
 	ext := strings.ToLower(strings.Trim(filepath.Ext(filePath), "."))
 
 	if ext == strings.ToLower(decodeType) {
-		converter.Convert(filePath, ext, encodeType)
+		err := converter.Convert(filePath, ext, encodeType)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 

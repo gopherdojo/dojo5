@@ -18,7 +18,6 @@ import (
 	"image/gif"
 	"image/jpeg"
 	"image/png"
-	"log"
 	"os"
 	"path"
 	"strings"
@@ -28,7 +27,7 @@ import (
 func dec(filePath string, decodeType string) (image.Image, error) {
 	reader, err := os.Open(filePath)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	defer reader.Close()
 
@@ -47,7 +46,7 @@ func dec(filePath string, decodeType string) (image.Image, error) {
 func enc(filePath string, encodeType string, m image.Image) error {
 	writer, err := os.Create(strings.TrimSuffix(filePath, path.Ext(filePath)) + "." + encodeType)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer writer.Close()
 
@@ -63,18 +62,19 @@ func enc(filePath string, encodeType string, m image.Image) error {
 }
 
 //Convert : convert decodeType file to encodeType file
-func Convert(filePath string, decodeType string, encodeType string) {
+func Convert(filePath string, decodeType string, encodeType string) error {
 	fmt.Println("Converting", filePath)
 
 	m, err := dec(filePath, decodeType)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	err = enc(filePath, encodeType, m)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	fmt.Println("Converted", filePath)
+	return nil
 }
