@@ -18,15 +18,20 @@ func NewWalker() Walker {
 }
 
 func (w *walker) Find(path string, ext string) ([]string, error) {
+	if path == "" {
+		return nil, fmt.Errorf("Please set path")
+	}
+
 	numFile := 0
 	filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
+		fmt.Println(info.Name())
 		if !info.IsDir() &&
-			strings.TrimLeft(filepath.Ext(info.Name()), ".") == ext {
+			strings.TrimLeft(filepath.Ext(info.Name()), ".") == ext &&
+			!(info.Mode()&os.ModeSymlink == os.ModeSymlink) {
 			numFile++
-			fmt.Println(info.Name())
 		}
 		return nil
 	})
@@ -40,7 +45,8 @@ func (w *walker) Find(path string, ext string) ([]string, error) {
 			return err
 		}
 		if !info.IsDir() &&
-			strings.TrimLeft(filepath.Ext(info.Name()), ".") == ext {
+			strings.TrimLeft(filepath.Ext(info.Name()), ".") == ext &&
+			!(info.Mode()&os.ModeSymlink == os.ModeSymlink) {
 			paths[i] = path
 			i++
 		}
