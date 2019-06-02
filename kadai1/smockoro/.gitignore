@@ -106,3 +106,9 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.gitignore.io/api/go,vim,linux,macos,windows
+
+# Image file
+*.png
+*.jpeg
+*.jpg
+*.gif
