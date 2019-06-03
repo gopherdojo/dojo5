@@ -6,8 +6,6 @@ import (
 	"image/jpeg"
 	"image/png"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"golang.org/x/image/bmp"
 	"golang.org/x/image/tiff"
@@ -17,8 +15,12 @@ import (
 type ImgConv struct {
 	// source path e.g. `path/to/A.jpg`
 	SrcPath string
+	// source image extension
+	SrcExt ImgExt
 	// target path e.g. `path/to/A.png`
 	TgtPath string
+	// target image extension
+	TgtExt ImgExt
 	// converter options (currently, this value is not interpreted by encodeImg())
 	Options map[string]interface{}
 }
@@ -40,7 +42,7 @@ func (ic *ImgConv) Convert() error {
 		}
 	}()
 
-	srcImg, err := decodeImg(srcFile)
+	srcImg, err := decodeImg(srcFile, ic.SrcExt)
 	if err != nil {
 		return fmt.Errorf("failed to decode: %s", ic.SrcPath)
 	}
@@ -57,7 +59,7 @@ func (ic *ImgConv) Convert() error {
 		}
 	}()
 
-	err = encodeImg(tgtFile, &srcImg, ic.Options)
+	err = encodeImg(tgtFile, ic.TgtExt, &srcImg, ic.Options)
 	if err != nil {
 		rErr := os.Remove(ic.TgtPath)
 		if rErr != nil {
@@ -69,40 +71,36 @@ func (ic *ImgConv) Convert() error {
 	return nil
 }
 
-func encodeImg(file *os.File, img *image.Image, options map[string]interface{}) (err error) {
-	fileN := file.Name()
-	fileE := strings.ToLower(filepath.Ext(fileN))
-	switch fileE {
-	case ".jpg", ".jpeg":
+func encodeImg(file *os.File, ext ImgExt, img *image.Image, options map[string]interface{}) (err error) {
+	switch ext {
+	case ImgExtJPEG:
 		// TODO: apply encoder options
 		err = jpeg.Encode(file, *img, &jpeg.Options{})
-	case ".png":
+	case ImgExtPNG:
 		err = png.Encode(file, *img)
-	case ".tiff":
+	case ImgExtTIFF:
 		// TODO: apply encoder options
 		err = tiff.Encode(file, *img, &tiff.Options{})
-	case ".bmp":
+	case ImgExtBMP:
 		err = bmp.Encode(file, *img)
 	default:
-		err = fmt.Errorf("unsupported image extension: %s", fileE)
+		err = fmt.Errorf("unsupported image extension: %s", ext)
 	}
 	return
 }
 
-func decodeImg(file *os.File) (img image.Image, err error) {
-	fileN := file.Name()
-	fileE := strings.ToLower(filepath.Ext(fileN))
-	switch fileE {
-	case ".jpg", ".jpeg":
+func decodeImg(file *os.File, ext ImgExt) (img image.Image, err error) {
+	switch ext {
+	case ImgExtJPEG:
 		img, err = jpeg.Decode(file)
-	case ".png":
+	case ImgExtPNG:
 		img, err = png.Decode(file)
-	case ".tiff":
+	case ImgExtTIFF:
 		img, err = tiff.Decode(file)
-	case ".bmp":
+	case ImgExtBMP:
 		img, err = bmp.Decode(file)
 	default:
-		err = fmt.Errorf("unsupported image extension: %s", fileE)
+		err = fmt.Errorf("unsupported image extension: %s", ext)
 	}
 	return
 }

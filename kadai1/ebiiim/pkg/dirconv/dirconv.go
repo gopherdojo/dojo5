@@ -1,7 +1,6 @@
 package dirconv
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,24 +10,14 @@ import (
 	"github.com/gopherdojo/dojo5/kadai1/ebiiim/pkg/conv"
 )
 
-const usageSrcExt = `source extension (jpg, png, tiff, bmp)`
-const usageTgtExt = `target extension (jpg, png, tiff, bmp)`
-
-// Usage string
-const Usage = `Usage:
-  imgconv [-source_ext=<ext>] [-target_ext=<ext>] DIR
-Arguments:
-  -source_ext=<ext>` + "\t" + usageSrcExt + ` [default: jpg]
-  -target_ext=<ext>` + "\t" + usageTgtExt + ` [default: png]`
-
 // DirConv struct
 type DirConv struct {
 	// directory name to traverse
 	Dir string
 	// source extension
-	SrcExt string
+	SrcExt conv.ImgExt
 	// target extension
-	TgtExt string
+	TgtExt conv.ImgExt
 }
 
 // Result struct
@@ -41,7 +30,7 @@ type Result struct {
 	IsOk bool
 }
 
-// Convert runs an imgconv command (parsed by NewDirConv()).
+// Convert runs an imgconv command (parsed by ParseArgs()).
 //   1. traverses dirs
 //   2. converts files
 //   3. shows logs and returns results
@@ -49,12 +38,6 @@ type Result struct {
 //   [{0 dummy.jpg false} {2 dirA/figB.jpg true} {1 figA.jpg true} ...]
 func (dc DirConv) Convert() []Result {
 	var results []Result
-
-	// show help if no dir specified
-	if dc.Dir == "" {
-		fmt.Println(Usage)
-		os.Exit(0)
-	}
 
 	// get file paths to convert
 	files, err := dc.traverseImageFiles()
@@ -69,13 +52,17 @@ func (dc DirConv) Convert() []Result {
 		wg.Add(1)
 		go func(idx int, val string) {
 			defer wg.Done()
+
+			// make file paths
 			oldFileName := fmt.Sprintf("%s/%s", dc.Dir, val)
-			newFileName := oldFileName[0:len(oldFileName)-len(dc.SrcExt)] + dc.TgtExt
+			newFileName := fmt.Sprintf("%s%s", strings.TrimSuffix(oldFileName, filepath.Ext(oldFileName)), dc.TgtExt)
 			log := fmt.Sprintf("%s -> %s", oldFileName, newFileName)
 
-			ic := conv.ImgConv{SrcPath: oldFileName, TgtPath: newFileName}
-			err := ic.Convert()
+			// make a new ImgConv with file paths and file extensions
+			ic := conv.ImgConv{SrcPath: oldFileName, SrcExt: dc.SrcExt, TgtPath: newFileName, TgtExt: dc.TgtExt, Options: nil}
 
+			// do convert and check the result
+			err := ic.Convert()
 			ok := true
 			if err != nil {
 				ok = false
@@ -85,6 +72,7 @@ func (dc DirConv) Convert() []Result {
 				log = fmt.Sprintf("[OK] %s", log)
 			}
 
+			// make a new Result and append it to the results list
 			results = append(results, Result{Index: idx, RelPath: val, IsOk: ok})
 			fmt.Println(log)
 		}(i, v)
@@ -113,36 +101,10 @@ func (dc *DirConv) traverseImageFiles() ([]string, error) {
 	err = filepath.Walk(dc.Dir,
 		func(path string, info os.FileInfo, err error) error {
 			relPath, err := filepath.Rel(dc.Dir, path)
-			if !info.IsDir() && err == nil && strings.ToLower(filepath.Ext(relPath)) == dc.SrcExt {
+			if !info.IsDir() && err == nil && conv.ParseImgExt(relPath) == dc.SrcExt {
 				files = append(files, relPath)
 			}
 			return nil
 		})
 	return files, err
-}
-
-// NewDirConv initializes a DirConv struct with given command line arguments.
-func NewDirConv(args []string) *DirConv {
-	flags := flag.NewFlagSet(args[0], flag.ExitOnError)
-	var (
-		srcExt = flags.String("source_ext", "jpg", usageSrcExt)
-		tgtExt = flags.String("target_ext", "png", usageTgtExt)
-	)
-	err := flags.Parse(args[1:])
-	if err != nil {
-		panic(err)
-	}
-	dir := flags.Arg(0) // get the first dir name only
-
-	formatExt(srcExt)
-	formatExt(tgtExt)
-
-	return &DirConv{Dir: dir, SrcExt: *srcExt, TgtExt: *tgtExt}
-}
-
-func formatExt(ext *string) {
-	*ext = strings.ToLower(*ext)
-	if !strings.HasPrefix(*ext, ".") {
-		*ext = "." + *ext
-	}
 }
