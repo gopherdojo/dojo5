@@ -55,7 +55,7 @@ func (dc DirConv) Convert() []Result {
 
 			// make file paths
 			oldFileName := fmt.Sprintf("%s/%s", dc.Dir, val)
-			newFileName := fmt.Sprintf("%s%s", strings.TrimSuffix(oldFileName, filepath.Ext(oldFileName)), dc.TgtExt)
+			newFileName := fmt.Sprintf("%s.%s", strings.TrimSuffix(oldFileName, filepath.Ext(oldFileName)), dc.TgtExt)
 			log := fmt.Sprintf("%s -> %s", oldFileName, newFileName)
 
 			// make a new ImgConv with file paths and file extensions

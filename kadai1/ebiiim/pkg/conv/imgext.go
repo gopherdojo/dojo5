@@ -23,13 +23,13 @@ const (
 func (e ImgExt) String() string {
 	switch e {
 	case ImgExtJPEG:
-		return ".jpg"
+		return "jpg"
 	case ImgExtPNG:
-		return ".png"
+		return "png"
 	case ImgExtTIFF:
-		return ".tiff"
+		return "tiff"
 	case ImgExtBMP:
-		return ".bmp"
+		return "bmp"
 	default:
 		return "undefined"
 	}
