@@ -26,7 +26,12 @@ func Imgconv(bf, af ImageType, dirpath string) error {
 	filelist := make([]string, 0)
 	err := filepath.Walk(dirpath, func(fp string, info os.FileInfo, err error) error {
 		if info.Mode().IsRegular() {
-			filelist = append(filelist, fp)
+			ext := ImageType(filepath.Ext(fp))
+			ext = ext[1:]
+
+			if ext == bf {
+				filelist = append(filelist, fp)
+			}
 		}
 		return nil
 	})

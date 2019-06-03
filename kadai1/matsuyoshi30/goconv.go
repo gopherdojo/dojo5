@@ -36,7 +36,7 @@ func main() {
 	// フラグを読み込む
 	var a, b string
 	var sh bool
-	flag.StringVar(&b, "b", "jpeg", "Choose format before converted")
+	flag.StringVar(&b, "b", "jpg", "Choose format before converted")
 	flag.StringVar(&a, "a", "png", "Choose format after converted")
 	flag.BoolVar(&sh, "h", false, "Show help")
 	flag.Parse()
@@ -68,6 +68,7 @@ func main() {
 func selectFormat(f string) conv.ImageType {
 	switch f {
 	case "jpeg":
+		return conv.JPEG
 	case "jpg":
 		return conv.JPG
 	case "png":
