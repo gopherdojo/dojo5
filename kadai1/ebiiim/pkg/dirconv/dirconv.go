@@ -21,8 +21,8 @@ Arguments:
   -source_ext=<ext>` + "\t" + usageSrcExt + ` [default: jpg]
   -target_ext=<ext>` + "\t" + usageTgtExt + ` [default: png]`
 
-// Cli struct
-type Cli struct {
+// DirConv struct
+type DirConv struct {
 	// directory name to traverse
 	Dir string
 	// source extension
@@ -33,7 +33,7 @@ type Cli struct {
 
 // Result struct
 type Result struct {
-	// this value is usually not continuous because DirConv uses goroutine
+	// this value is usually not continuous because Convert uses goroutine
 	Index int
 	// relative path from the dir passed to args
 	RelPath string
@@ -41,23 +41,23 @@ type Result struct {
 	IsOk bool
 }
 
-// DirConv runs an imgconv command (parsed by NewCli()).
+// Convert runs an imgconv command (parsed by NewDirConv()).
 //   1. traverses dirs
 //   2. converts files
 //   3. shows logs and returns results
 // Returns a list of results likes:
 //   [{0 dummy.jpg false} {2 dirA/figB.jpg true} {1 figA.jpg true} ...]
-func (cli Cli) DirConv() []Result {
+func (dc DirConv) Convert() []Result {
 	var results []Result
 
 	// show help if no dir specified
-	if cli.Dir == "" {
+	if dc.Dir == "" {
 		fmt.Println(Usage)
 		os.Exit(0)
 	}
 
 	// get file paths to convert
-	files, err := cli.traverseImageFiles()
+	files, err := dc.traverseImageFiles()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(0)
@@ -69,8 +69,8 @@ func (cli Cli) DirConv() []Result {
 		wg.Add(1)
 		go func(idx int, val string) {
 			defer wg.Done()
-			oldFileName := fmt.Sprintf("%s/%s", cli.Dir, val)
-			newFileName := oldFileName[0:len(oldFileName)-len(cli.SrcExt)] + cli.TgtExt
+			oldFileName := fmt.Sprintf("%s/%s", dc.Dir, val)
+			newFileName := oldFileName[0:len(oldFileName)-len(dc.SrcExt)] + dc.TgtExt
 			log := fmt.Sprintf("%s -> %s", oldFileName, newFileName)
 
 			ic := conv.ImgConv{SrcPath: oldFileName, TgtPath: newFileName}
@@ -94,26 +94,26 @@ func (cli Cli) DirConv() []Result {
 	return results
 }
 
-func (cli *Cli) traverseImageFiles() ([]string, error) {
+func (dc *DirConv) traverseImageFiles() ([]string, error) {
 	var (
 		files []string
 		err   error
 	)
 
 	// check the dir exists
-	fileInfo, err := os.Stat(cli.Dir)
+	fileInfo, err := os.Stat(dc.Dir)
 	if err != nil {
 		return files, err // if the dir does not exist, return an empty slice
 	}
 	if !fileInfo.IsDir() {
-		return files, fmt.Errorf("%s is not a directory", cli.Dir)
+		return files, fmt.Errorf("%s is not a directory", dc.Dir)
 	}
 
 	// traverse the dir and return a list of image files has the given file extension
-	err = filepath.Walk(cli.Dir,
+	err = filepath.Walk(dc.Dir,
 		func(path string, info os.FileInfo, err error) error {
-			relPath, err := filepath.Rel(cli.Dir, path)
-			if !info.IsDir() && err == nil && strings.ToLower(filepath.Ext(relPath)) == cli.SrcExt {
+			relPath, err := filepath.Rel(dc.Dir, path)
+			if !info.IsDir() && err == nil && strings.ToLower(filepath.Ext(relPath)) == dc.SrcExt {
 				files = append(files, relPath)
 			}
 			return nil
@@ -121,8 +121,8 @@ func (cli *Cli) traverseImageFiles() ([]string, error) {
 	return files, err
 }
 
-// NewCli initializes a Cli struct with given args.
-func NewCli(args []string) (cli *Cli) {
+// NewDirConv initializes a DirConv struct with given command line arguments.
+func NewDirConv(args []string) *DirConv {
 	flags := flag.NewFlagSet(args[0], flag.ExitOnError)
 	var (
 		srcExt = flags.String("source_ext", "jpg", usageSrcExt)
@@ -137,8 +137,7 @@ func NewCli(args []string) (cli *Cli) {
 	formatExt(srcExt)
 	formatExt(tgtExt)
 
-	cli = &Cli{Dir: dir, SrcExt: *srcExt, TgtExt: *tgtExt}
-	return
+	return &DirConv{Dir: dir, SrcExt: *srcExt, TgtExt: *tgtExt}
 }
 
 func formatExt(ext *string) {

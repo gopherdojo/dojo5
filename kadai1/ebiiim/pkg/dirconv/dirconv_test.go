@@ -16,20 +16,20 @@ func check(t *testing.T, got interface{}, want interface{}) {
 func TestNewCli1(t *testing.T) {
 	// normal: no options
 	args := []string{"imgconv", "../../testdata"}
-	cli := dirconv.NewCli(args)
-	check(t, *cli, dirconv.Cli{Dir: "../../testdata", SrcExt: ".jpg", TgtExt: ".png"})
+	dc := dirconv.NewDirConv(args)
+	check(t, *dc, dirconv.DirConv{Dir: "../../testdata", SrcExt: ".jpg", TgtExt: ".png"})
 }
 
 func TestNewCli2(t *testing.T) {
 	// normal: with options
 	args := []string{"imgconv", "-source_ext=PNG", "-target_ext=.tiff", "../../testdata"}
-	cli := dirconv.NewCli(args)
-	check(t, *cli, dirconv.Cli{Dir: "../../testdata", SrcExt: ".png", TgtExt: ".tiff"})
+	dc := dirconv.NewDirConv(args)
+	check(t, *dc, dirconv.DirConv{Dir: "../../testdata", SrcExt: ".png", TgtExt: ".tiff"})
 }
 
 func TestCli_DirConv(t *testing.T) {
 	args := []string{"imgconv", "../testdata"}
-	got := dirconv.NewCli(args).DirConv()
+	got := dirconv.NewDirConv(args).Convert()
 	want := []dirconv.Result{
 		{Index: 0, RelPath: "dummy.jpg", IsOk: false},
 		{Index: 1, RelPath: "gopherA.jpg", IsOk: true},

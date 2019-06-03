@@ -7,5 +7,5 @@ import (
 )
 
 func main() {
-	dirconv.NewCli(os.Args).DirConv()
+	dirconv.NewDirConv(os.Args).Convert()
 }
