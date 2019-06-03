@@ -27,7 +27,7 @@ func main() {
 		os.Exit(exitSuccess)
 	}
 
-	err := imgconv.Convert(ca.dirPath,
+	err := imgconv.ConvertDir(ca.dirPath,
 		imgconv.ImgType(ca.srcImgType),
 		imgconv.ImgType(ca.destImgType),
 		true)
@@ -57,10 +57,10 @@ func (ca cliArguments) validate() error {
 	}
 
 	at := imgconv.GetSupportSrcImgTypes()
-	if !at.IsSupport(ca.srcImgType) {
+	if !at.IsSupport(imgconv.ImgType(ca.srcImgType)) {
 		return fmt.Errorf("not support source image type: %s", ca.srcImgType)
 	}
-	if !at.IsSupport(ca.destImgType) {
+	if !at.IsSupport(imgconv.ImgType(ca.destImgType)) {
 		return fmt.Errorf("not support destination image type: %s", ca.destImgType)
 	}
 

@@ -12,7 +12,7 @@ func Test_getEncoder(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want encoder
+		want Encoder
 	}{
 		{
 			"get jpg decoder",
@@ -37,7 +37,7 @@ func Test_getEncoder(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getEncoder(tt.args.imgType); !reflect.DeepEqual(got, tt.want) {
+			if got := GetEncoder(tt.args.imgType); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("getEncoder() = %v, want %v", got, tt.want)
 			}
 		})

@@ -1,5 +1,5 @@
 // Package imgconv provides image converting ability
-// by calling Convert() method
+// by calling ConvertDir() method
 // All images in given directory and its sub directories with given image type
 // will be converted recursively.
 // Each image and sub directory will be processed concurrently in a goroutine.
@@ -15,58 +15,46 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// ImgType represents image type option
-// that this converter support
-type ImgType string
-
-const (
-	// ImgTypeJPEG is constant for JPEG image
-	ImgTypeJPEG ImgType = "jpeg"
-	// ImgTypePNG is constant for PNG image
-	ImgTypePNG ImgType = "png"
-	// ImgTypeGIF is constant for GIF image
-	ImgTypeGIF ImgType = "gif"
-)
-
-var extensions = map[ImgType]string{
-	ImgTypeJPEG: "jpg",
-	ImgTypePNG:  "png",
-	ImgTypeGIF:  "gif",
-}
-
-// SupportSrcImgTypes is a list of ImgType
-type SupportSrcImgTypes []ImgType
-
-// IsSupport returns imgType is supported by this tool or not
-func (ssits SupportSrcImgTypes) IsSupport(imgType string) bool {
-	for _, it := range ssits {
-		if string(it) == imgType {
-			return true
-		}
+// RegisterDestImgType is used when you want to encode to a new custom destination image type,
+// that not in default support of this package.
+// Ref to README.md file for more details about how to do it.
+func RegisterDestImgType(destImgType ImgType, enc Encoder, destImgExt ImgExt) error {
+	if err := registerNewEncoder(destImgType, enc); err != nil {
+		return err
+	}
+	if err := registerNewExt(destImgType, destImgExt); err != nil {
+		return err
 	}
 
-	return false
+	return nil
 }
 
-// GetSupportSrcImgTypes returns all supported types
-// of input and output image
-func GetSupportSrcImgTypes() SupportSrcImgTypes {
-	return SupportSrcImgTypes{ImgTypeJPEG, ImgTypePNG, ImgTypeGIF}
+// RegisterSrcImgType is used when you want to decode to a new custom destination image type,
+// that not in default support of this package.
+// Ref to README.md file for more details about how to do it.
+func RegisterSrcImgType(srcImgType ImgType, dec Decoder) error {
+	if err := registerImgType(srcImgType); err != nil {
+		return err
+	}
+	if err := registerNewDecoder(srcImgType, dec); err != nil {
+		return err
+	}
+	return nil
 }
 
-// decoder decodes a io.Reader to pkgimg.Image
-type decoder interface {
-	decode(r io.Reader) (pkgimg.Image, error)
+// Decoder decodes a io.Reader to pkgimg.Image
+type Decoder interface {
+	Decode(r io.Reader) (pkgimg.Image, error)
 }
 
-// encoder encodes a io.Writer to pkgimg.Image
-type encoder interface {
-	encode(w io.Writer, m pkgimg.Image) error
+// Encoder encodes a io.Writer to pkgimg.Image
+type Encoder interface {
+	Encode(w io.Writer, m pkgimg.Image) error
 }
 
-// Convert converts all images having srcImgType type
+// ConvertDir converts all images having srcImgType type
 // to destImgType type in dirPath path recursively
-func Convert(dirPath string, srcImgType, destImgType ImgType, skipErr bool) error {
+func ConvertDir(dirPath string, srcImgType, destImgType ImgType, skipErr bool) error {
 	if srcImgType == destImgType {
 		// same image format, then nothing todo
 		return nil
@@ -78,21 +66,14 @@ func Convert(dirPath string, srcImgType, destImgType ImgType, skipErr bool) erro
 		destImgType: destImgType,
 		skipErr:     skipErr,
 	}
-
-	decoder := getDecoder(conv.srcImgType)
-	if decoder == nil {
-		return fmt.Errorf("decoder not found for img type: %s", conv.srcImgType)
-	}
-	conv.dec = decoder
-
-	encoder := getEncoder(conv.destImgType)
-	if encoder == nil {
-		return fmt.Errorf("encoder not found for img type: %s", conv.destImgType)
-	}
-	conv.enc = encoder
-
+	conv.decoder = GetDecoder(conv.srcImgType)
+	conv.encoder = GetEncoder(conv.destImgType)
+	conv.destImgExt = GetExtension(conv.destImgType)
 	conv.errOnConvImg = errBuilder(conv.skipErr)
 
+	if err := conv.validate(); err != nil {
+		return err
+	}
 	if err := conv.convert(); err != nil {
 		return err
 	}
@@ -104,8 +85,9 @@ type converter struct {
 	dirPath     string
 	srcImgType  ImgType
 	destImgType ImgType
-	dec         decoder
-	enc         encoder
+	destImgExt  ImgExt
+	decoder     Decoder
+	encoder     Encoder
 	// skipErr indicates converter will keep continuing to next file
 	// or stop and return error when convert single image one by one.
 	//
@@ -118,6 +100,32 @@ type converter struct {
 	// errorOnConv returns error of image when converting
 	// error value is based on skipErr
 	errOnConvImg func(err error) error
+}
+
+func (conv converter) validate() error {
+	if conv.dirPath == "" {
+		return fmt.Errorf("dir path is not set")
+	}
+	if conv.srcImgType == ImgType("") {
+		return fmt.Errorf("src img type is not set")
+	}
+	if conv.destImgType == ImgType("") {
+		return fmt.Errorf("dest img type is not set")
+	}
+	if conv.destImgExt == ImgExt("") {
+		return fmt.Errorf("extension is not found for %s", conv.destImgExt)
+	}
+	if conv.decoder == nil {
+		return fmt.Errorf("decoder not found for img type: %s", conv.srcImgType)
+	}
+	if conv.encoder == nil {
+		return fmt.Errorf("encoder not found for img type: %s", conv.destImgType)
+	}
+	if conv.destImgExt == ImgExt("") {
+		return fmt.Errorf("destination image extension not found for img type: %s", conv.destImgType)
+	}
+
+	return nil
 }
 
 func (conv converter) convert() error {
@@ -151,19 +159,19 @@ func (conv converter) convertImg(img image) error {
 		return fmt.Errorf("error on open file to convert. file: %s, err: %+v", img.path, err)
 	}
 
-	decodedImg, err := conv.dec.decode(srcImg)
+	decodedImg, err := conv.decoder.Decode(srcImg)
 	if err != nil {
 		return fmt.Errorf("error on decode %+v, err: %+v", img, err)
 	}
 
-	destPath := img.toDestImgPath(conv.destImgType)
+	destPath := img.toDestImgPath(conv.destImgType, conv.destImgExt)
 	destImg, err := os.Create(destPath)
 	defer destImg.Close()
 	if err != nil {
 		return fmt.Errorf("error on create dest file at path: %s, err: %+v", destPath, err)
 	}
 
-	if err := conv.enc.encode(destImg, decodedImg); err != nil {
+	if err := conv.encoder.Encode(destImg, decodedImg); err != nil {
 		return fmt.Errorf("error on encode img: %+v, error: %+v", img, err)
 	}
 
@@ -199,10 +207,10 @@ type image struct {
 	path string
 }
 
-func (img image) toDestImgPath(destImgType ImgType) string {
+func (img image) toDestImgPath(destImgType ImgType, destImgExt ImgExt) string {
 	ext := filepath.Ext(img.path)
-	newExt := extensions[destImgType]
-	return img.path[0:len(img.path)-len(ext)] + "." + newExt
+	destPath := img.path[0:len(img.path)-len(ext)] + "." + string(destImgExt)
+	return destPath
 }
 
 func (img image) remove() error {

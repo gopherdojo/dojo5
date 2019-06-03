@@ -36,7 +36,7 @@ func TestSupportSrcImgTypes_IsSupport(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.ssits.IsSupport(tt.args.imgType); got != tt.want {
+			if got := tt.ssits.IsSupport(ImgType(tt.args.imgType)); got != tt.want {
 				t.Errorf("SupportSrcImgTypes.IsSupport() = %v, want %v", got, tt.want)
 			}
 		})
@@ -77,9 +77,10 @@ func Test_converter_convert(t *testing.T) {
 		dirPath     string
 		srcImgType  ImgType
 		destImgType ImgType
+		destImgExt  ImgExt
 		skipErr     bool
-		dec         decoder
-		enc         encoder
+		decoder     Decoder
+		encoder     Encoder
 	}
 	tests := []struct {
 		name   string
@@ -98,9 +99,10 @@ func Test_converter_convert(t *testing.T) {
 				dirPath:     rootForTestDir,
 				srcImgType:  ImgTypeJPEG,
 				destImgType: ImgTypePNG,
+				destImgExt:  "png",
 				skipErr:     false,
-				dec:         getDecoder(ImgTypeJPEG),
-				enc:         getEncoder(ImgTypePNG),
+				decoder:     GetDecoder(ImgTypeJPEG),
+				encoder:     GetEncoder(ImgTypePNG),
 			},
 			expectDeletedImgs: paths{
 				// converted image
@@ -120,9 +122,10 @@ func Test_converter_convert(t *testing.T) {
 				dirPath:     rootForTestDir,
 				srcImgType:  ImgTypeJPEG,
 				destImgType: ImgTypeGIF,
+				destImgExt:  "gif",
 				skipErr:     false,
-				dec:         getDecoder(ImgTypeJPEG),
-				enc:         getEncoder(ImgTypeGIF),
+				decoder:     GetDecoder(ImgTypeJPEG),
+				encoder:     GetEncoder(ImgTypeGIF),
 			},
 			expectDeletedImgs: paths{
 				// converted image
@@ -142,9 +145,10 @@ func Test_converter_convert(t *testing.T) {
 				dirPath:     rootForTestDir,
 				srcImgType:  ImgTypeGIF,
 				destImgType: ImgTypeJPEG,
+				destImgExt:  "jpg",
 				skipErr:     false,
-				dec:         getDecoder(ImgTypeGIF),
-				enc:         getEncoder(ImgTypeJPEG),
+				decoder:     GetDecoder(ImgTypeGIF),
+				encoder:     GetEncoder(ImgTypeJPEG),
 			},
 			expectDeletedImgs: paths{
 				// converted image
@@ -164,9 +168,10 @@ func Test_converter_convert(t *testing.T) {
 				dirPath:     rootForTestDir,
 				srcImgType:  ImgTypeGIF,
 				destImgType: ImgTypePNG,
+				destImgExt:  "png",
 				skipErr:     false,
-				dec:         getDecoder(ImgTypeGIF),
-				enc:         getEncoder(ImgTypePNG),
+				decoder:     GetDecoder(ImgTypeGIF),
+				encoder:     GetEncoder(ImgTypePNG),
 			},
 			expectDeletedImgs: paths{
 				// converted image
@@ -186,9 +191,10 @@ func Test_converter_convert(t *testing.T) {
 				dirPath:     rootForTestDir,
 				srcImgType:  ImgTypePNG,
 				destImgType: ImgTypeGIF,
+				destImgExt:  "gif",
 				skipErr:     false,
-				dec:         getDecoder(ImgTypePNG),
-				enc:         getEncoder(ImgTypeGIF),
+				decoder:     GetDecoder(ImgTypePNG),
+				encoder:     GetEncoder(ImgTypeGIF),
 			},
 			expectDeletedImgs: paths{
 				// converted image
@@ -208,9 +214,10 @@ func Test_converter_convert(t *testing.T) {
 				dirPath:     rootForTestDir,
 				srcImgType:  ImgTypePNG,
 				destImgType: ImgTypeJPEG,
+				destImgExt:  "jpg",
 				skipErr:     false,
-				dec:         getDecoder(ImgTypePNG),
-				enc:         getEncoder(ImgTypeJPEG),
+				decoder:     GetDecoder(ImgTypePNG),
+				encoder:     GetEncoder(ImgTypeJPEG),
 			},
 			expectDeletedImgs: paths{
 				// converted image
@@ -233,8 +240,8 @@ func Test_converter_convert(t *testing.T) {
 				srcImgType:  ImgTypePNG,
 				destImgType: ImgTypeJPEG,
 				skipErr:     false,
-				dec:         getDecoder(ImgTypeGIF), // wrong decoder
-				enc:         getEncoder(ImgTypeJPEG),
+				decoder:     GetDecoder(ImgTypeGIF), // wrong decoder
+				encoder:     GetEncoder(ImgTypeJPEG),
 			},
 			// no new files were added
 			expectDeletedImgs: paths{},
@@ -265,9 +272,10 @@ func Test_converter_convert(t *testing.T) {
 				dirPath:     tt.fields.dirPath,
 				srcImgType:  tt.fields.srcImgType,
 				destImgType: tt.fields.destImgType,
+				destImgExt:  tt.fields.destImgExt,
 				skipErr:     tt.fields.skipErr,
-				enc:         tt.fields.enc,
-				dec:         tt.fields.dec,
+				encoder:     tt.fields.encoder,
+				decoder:     tt.fields.decoder,
 			}
 			conv.errOnConvImg = errBuilder(conv.skipErr)
 

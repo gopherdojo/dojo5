@@ -1,35 +1,62 @@
 package imgconv
 
 import (
+	"fmt"
 	pkgimg "image"
 	"image/gif"
 	"image/jpeg"
 	"image/png"
 	"io"
+	"sync"
 )
 
-var decoders = map[ImgType]decoder{
-	ImgTypePNG:  pngDecoder{},
-	ImgTypeJPEG: jpegDecoder{},
-	ImgTypeGIF:  gifDecoder{},
+type supportDecoders struct {
+	mu   sync.Mutex
+	decs map[ImgType]Decoder
+}
+
+var decoders = supportDecoders{
+	decs: map[ImgType]Decoder{
+		ImgTypePNG:  pngDecoder{},
+		ImgTypeJPEG: jpegDecoder{},
+		ImgTypeGIF:  gifDecoder{},
+	},
 }
 
 type pngDecoder struct{}
 type jpegDecoder struct{}
 type gifDecoder struct{}
 
-func (pd pngDecoder) decode(r io.Reader) (pkgimg.Image, error) {
+// Decode is a wrapper of png.Decode method
+func (pd pngDecoder) Decode(r io.Reader) (pkgimg.Image, error) {
 	return png.Decode(r)
 }
 
-func (jd jpegDecoder) decode(r io.Reader) (pkgimg.Image, error) {
+// Decode is a wrapper of jpeg.Decode method
+func (jd jpegDecoder) Decode(r io.Reader) (pkgimg.Image, error) {
 	return jpeg.Decode(r)
 }
 
-func (gd gifDecoder) decode(r io.Reader) (pkgimg.Image, error) {
+// Decode is a wrapper of gif.Decode method
+func (gd gifDecoder) Decode(r io.Reader) (pkgimg.Image, error) {
 	return gif.Decode(r)
 }
 
-func getDecoder(imgType ImgType) decoder {
-	return decoders[imgType]
+// GetDecoder returns Decoder associated with given imgType
+func GetDecoder(imgType ImgType) Decoder {
+	decoders.mu.Lock()
+	defer decoders.mu.Unlock()
+	return decoders.decs[imgType]
+}
+
+func registerNewDecoder(imgType ImgType, dec Decoder) error {
+	decoders.mu.Lock()
+	defer decoders.mu.Unlock()
+
+	if d, ok := decoders.decs[imgType]; ok && d != nil {
+		return fmt.Errorf("decoder for %s already registered", imgType)
+	}
+
+	decoders.decs[imgType] = dec
+	return nil
 }
