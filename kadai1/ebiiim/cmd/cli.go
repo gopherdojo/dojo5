@@ -17,8 +17,8 @@ Arguments:
   -source_ext=<ext>` + "\t" + usageSrcExt + ` [default: jpg]
   -target_ext=<ext>` + "\t" + usageTgtExt + ` [default: png]`
 
-// parseArgs initializes a DirConv struct with given command line arguments.
-func parseArgs(args []string) *dirconv.DirConv {
+// ParseArgs initializes a DirConv struct with given command line arguments.
+func ParseArgs(args []string) *dirconv.DirConv {
 	flags := flag.NewFlagSet(args[0], flag.ExitOnError)
 	var (
 		srcExt = flags.String("source_ext", "jpg", usageSrcExt)
@@ -34,7 +34,7 @@ func parseArgs(args []string) *dirconv.DirConv {
 }
 
 func main() {
-	dc := parseArgs(os.Args)
+	dc := ParseArgs(os.Args)
 
 	// show help if no dir specified
 	if dc.Dir == "" {
