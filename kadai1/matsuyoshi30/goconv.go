@@ -59,7 +59,8 @@ func main() {
 		fmt.Println(usage)
 	} else {
 		for _, d := range dirlist {
-			conv.Imgconv(bf, af, d)
+			err := conv.Imgconv(bf, af, d)
+			logError(err, false)
 		}
 	}
 }
@@ -79,4 +80,13 @@ func selectFormat(f string) conv.ImageType {
 		log.Fatal("Unknown format")
 	}
 	return ""
+}
+
+func logError(err error, stop bool) {
+	if err != nil {
+		log.Fatal(err)
+		if stop {
+			os.Exit(1)
+		}
+	}
 }
