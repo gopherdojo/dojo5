@@ -21,5 +21,6 @@ func main() {
 		os.Exit(0)
 	}
 
-	ifconv.Execute(dir, *before, *after)
+	result := ifconv.Execute(dir, *before, *after)
+	fmt.Println(result)
 }
