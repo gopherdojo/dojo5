@@ -53,7 +53,7 @@ func imgconv(bf, af ImageType, filelist []string) error {
 
 		dir, fn := filepath.Split(f)
 		of := filepath.Base(fn[:len(fn)-len(filepath.Ext(fn))])
-		outfile := dir + of
+		outfile := filepath.Join(dir, of)
 
 		err = encoder(img, outfile, af)
 		if err != nil {
