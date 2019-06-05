@@ -6,7 +6,11 @@ import (
 )
 
 func Test_Walk(t *testing.T) {
-	ch := Walk("./testdir")
+	ch, err := Walk("./testdir")
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	count := 0
 	for filePath := range ch {
 		fmt.Println(filePath)

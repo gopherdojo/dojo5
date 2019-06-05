@@ -2,6 +2,7 @@ package args
 
 import (
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -33,7 +34,7 @@ const usageString = `Usage of myConverter:
 `
 
 // ParseArgs is the constructor of struct "args"
-func ParseArgs() *Args {
+func ParseArgs() (*Args, error) {
 	flag.Usage = usage
 	arg1 := flag.String("from", "jpg", "original file type to convert")
 	arg2 := flag.String("to", "png", "file type you want to convert")
@@ -41,9 +42,10 @@ func ParseArgs() *Args {
 	flag.Parse()
 
 	// フォルダが指定されているかチェックする
+	var err error
 	folder := flag.Args()
 	if len(folder) == 0 {
-		log.Fatal("specify target directory")
+		err = fmt.Errorf("specify target directory")
 	}
 
 	newArgs := &Args{
@@ -52,5 +54,5 @@ func ParseArgs() *Args {
 		RootFolderName: flag.Args(),
 	}
 
-	return newArgs
+	return newArgs, err
 }

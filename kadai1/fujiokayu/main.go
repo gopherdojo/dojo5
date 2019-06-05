@@ -23,10 +23,17 @@ func execute(filePath string, decodeType string, encodeType string) {
 }
 
 func main() {
-	args := args.ParseArgs()
+	args, err := args.ParseArgs()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	folder := strings.Join(args.RootFolderName, " ")
 
-	ch := walker.Walk(folder)
+	ch, err := walker.Walk(folder)
+	if err != nil {
+		log.Fatal(err)
+	}
 	for filePath := range ch {
 		execute(filePath, args.DecodeType, args.EncodeType)
 	}
