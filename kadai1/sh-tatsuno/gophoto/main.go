@@ -49,7 +49,7 @@ func run(args []string) int {
 	var dirName, input, output string
 
 	// args
-	flags := flag.NewFlagSet("imgconv", flag.ContinueOnError)
+	flags := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
 	flags.Usage = usage
 	flags.IntVar(&n, "n", 10, "number of maximum images to convert; default is 10.")
 	flags.StringVar(&dirName, "d", "", "directory path.")
@@ -84,7 +84,7 @@ func run(args []string) int {
 			return ExitCodeError
 		}
 
-		if err := img.Replace(output); err != nil {
+		if err := img.Convert(output); err != nil {
 			fmt.Printf("can not convert file, %v\n", err)
 			return ExitCodeError
 		}

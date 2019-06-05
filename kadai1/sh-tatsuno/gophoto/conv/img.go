@@ -39,8 +39,8 @@ func (i *Img) Save(path string) error {
 	ext := filepath.Ext(path)
 	var err error
 	err = func(ext string) error {
-		for _, postfix := range []string{".jpeg", ".jpg", ".gif", ".png"} {
-			if ext == postfix {
+		for _, suffix := range []string{".jpeg", ".jpg", ".gif", ".png"} {
+			if ext == suffix {
 				return nil
 			}
 		}
@@ -79,8 +79,8 @@ func (i *Img) AddExt(ext string) string {
 	return i.Path + ext
 }
 
-// Replace replace image
-func (i *Img) Replace(ext string) error {
+// Convert convert image
+func (i *Img) Convert(ext string) error {
 
 	// check path
 	prevPath := i.Path

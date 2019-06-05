@@ -26,7 +26,7 @@ func Lookup(dir string, ext string, pathList []string) ([]string, error) {
 			}
 		}
 
-		// check if the postfix is equal to the input format
+		// check if the suffix is equal to the input format
 		if filepath.Ext(path) == ext {
 			pathList = append(pathList, path)
 		}
