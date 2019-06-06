@@ -16,14 +16,14 @@ NAME:
    goconv - image format converter written in Go
 
 USAGE:
-   goconv [-b before image format] [-a after image format] path/to/dir
+   goconv [-from before image format] [-to after image format] path/to/dir
 
 VERSION:
    0.1.0
 
 GLOBAL OPTIONS:
-   -b              specify format before converted (jpg, png, gif) [DEFAULT: jpg]
-   -a              specify format after converted  (png, jpg, gif) [DEFAULT: png]
+   -from           specify format before converted (jpg, png, gif) [DEFAULT: jpg]
+   -to             specify format after converted  (png, jpg, gif) [DEFAULT: png]
    --help, -h      show help
 `
 
@@ -35,10 +35,10 @@ func main() {
 	}
 
 	// フラグを読み込む
-	var a, b string
+	var from, to string
 	var sh bool
-	flag.StringVar(&b, "b", "jpg", "Choose format before converted")
-	flag.StringVar(&a, "a", "png", "Choose format after converted")
+	flag.StringVar(&from, "from", "jpg", "Choose format before converted")
+	flag.StringVar(&to, "to", "png", "Choose format after converted")
 	flag.BoolVar(&sh, "h", false, "Show help")
 	flag.Parse()
 
@@ -49,8 +49,8 @@ func main() {
 	}
 
 	// フラグで指定されたフォーマットを ImageType 型に置き換える
-	bf := selectFormat(b)
-	af := selectFormat(a)
+	fromtype := selectFormat(from)
+	totype := selectFormat(to)
 
 	dirlist := OptPath(flag.Args())
 
@@ -58,7 +58,7 @@ func main() {
 		fmt.Println(usage)
 	} else {
 		for _, d := range dirlist {
-			err := conv.Imgconv(bf, af, d)
+			err := conv.Imgconv(fromtype, totype, d)
 			logError(err, false)
 		}
 	}

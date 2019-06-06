@@ -21,12 +21,12 @@ const (
 )
 
 // Imgconv dirpath 配下にある、bf に指定されたフォーマットの画像を、af に指定されたフォーマットの画像に変換する
-func Imgconv(bf, af ImageType, dirpath string) error {
+func Imgconv(fromtype, totype ImageType, dirpath string) error {
 	filelist := make([]string, 0)
 	err := filepath.Walk(dirpath, func(fp string, info os.FileInfo, err error) error {
 		if info.Mode().IsRegular() {
 			ext := ImageType(filepath.Ext(fp))
-			if ext == bf {
+			if ext == fromtype {
 				filelist = append(filelist, fp)
 			}
 		}
@@ -36,11 +36,11 @@ func Imgconv(bf, af ImageType, dirpath string) error {
 		return err
 	}
 
-	return imgconv(af, filelist)
+	return imgconv(totype, filelist)
 }
 
 // imgconv filelist内の、bf に指定されたフォーマットの画像を、af に指定されたフォーマットの画像に変換する
-func imgconv(af ImageType, filelist []string) error {
+func imgconv(totype ImageType, filelist []string) error {
 	for _, f := range filelist {
 		fmt.Printf("INPUT: %s", filepath.Base(f))
 		img, err := decoder(f)
@@ -52,11 +52,11 @@ func imgconv(af ImageType, filelist []string) error {
 		of := filepath.Base(fn[:len(fn)-len(filepath.Ext(fn))])
 		outfile := filepath.Join(dir, of)
 
-		err = encoder(img, outfile, af)
+		err = encoder(img, outfile, totype)
 		if err != nil {
 			return err
 		}
-		fmt.Printf(" => OUTPUT: %s%s\n", of, af)
+		fmt.Printf(" => OUTPUT: %s%s\n", of, totype)
 	}
 
 	return nil
