@@ -11,4 +11,4 @@ clean:
 
 .PHONY: test
 test: build
-	go test -v ./conv
+	go test -v ./...

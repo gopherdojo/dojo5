@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/matsuyoshi30/dojo5/kadai1/matsuyoshi30/conv"
 )
@@ -51,9 +52,7 @@ func main() {
 	bf := selectFormat(b)
 	af := selectFormat(a)
 
-	// TODO: 複数のディレクトリが指定されている場合は複数のディレクトリをリスト化する
-	//       指定されている複数のディレクトリが階層的に重複している場合は、最上位のパスで最適化する
-	dirlist := flag.Args()
+	dirlist := OptPath(flag.Args())
 
 	if len(dirlist) < 1 {
 		fmt.Println(usage)
@@ -80,6 +79,30 @@ func selectFormat(f string) conv.ImageType {
 		log.Fatal("Unknown format")
 	}
 	return ""
+}
+
+func OptPath(paths []string) []string {
+	dirlist := make([]string, 0)
+	for _, p := range paths {
+		if !contains(dirlist, p) {
+			dirlist = append(dirlist, p)
+		}
+	}
+
+	return dirlist
+}
+
+func contains(s []string, e string) bool {
+	if len(s) == 0 {
+		return false
+	}
+
+	for _, v := range s {
+		if strings.HasPrefix(v, e) || strings.HasPrefix(e, v) {
+			return true
+		}
+	}
+	return false
 }
 
 func logError(err error, stop bool) {

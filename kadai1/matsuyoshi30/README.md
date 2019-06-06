@@ -1,9 +1,9 @@
 # 課題1
 
-### TODO
+### Usage
 
 ```bash
-$ goconv [-b before image format] [-a after image format] path/to/dir
+$ goconv [-b before image format] [-a after image format] path/to/dir...
 ```
 
 ### TODO
