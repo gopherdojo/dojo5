@@ -6,7 +6,7 @@ import (
 )
 
 func Test_Walk(t *testing.T) {
-	ch, err := Walk("./testdir")
+	ch, err := Walk("../testdata")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -17,7 +17,7 @@ func Test_Walk(t *testing.T) {
 		count++
 	}
 
-	if count != 3 {
+	if count != 4 {
 		fmt.Println(len(ch))
 		t.Fatal("failed test")
 	}

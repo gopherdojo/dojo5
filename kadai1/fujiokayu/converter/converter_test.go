@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-const decodeFile string = "./cat.jpg"
-const encodeFile string = "./cat.png"
+const decodeFile string = "../testdata/cat.jpg"
+const encodeFile string = "../testdata/cat.png"
 
 func Test_Convert(t *testing.T) {
 	err := Convert(decodeFile, "jpg", "png")
