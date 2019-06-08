@@ -1,3 +1,4 @@
+// Package conv provides an image conversion function to convert single image files.
 package conv
 
 import (

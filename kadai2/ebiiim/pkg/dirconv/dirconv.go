@@ -1,3 +1,6 @@
+// Package dirconv provides a per directory image converter.
+// Using package dir to traverse directories
+// and using package conv to convert images.
 package dirconv
 
 import (

@@ -1,3 +1,4 @@
+// Package img provides type Ext representing image file extensions.
 package img
 
 import (

@@ -1,3 +1,4 @@
+// Package dir provides a traverse function to list the image files in the directory.
 package dir
 
 import (
