@@ -67,8 +67,12 @@ func main() {
 		}
 		os.Exit(0)
 	}
-	_, err = dc.Convert()
+	results, err := dc.Convert()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
+		os.Exit(0)
+	}
+	for _, r := range results {
+		fmt.Printf("%v", *r)
 	}
 }

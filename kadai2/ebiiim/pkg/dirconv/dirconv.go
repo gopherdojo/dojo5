@@ -28,15 +28,15 @@ type Result struct {
 	// relative path from the dir passed to args
 	RelPath string
 	// if err == nil then true
-	IsOk bool
+	Err error
 }
 
 // Convert runs an imgconv command (parsed by ParseArgs()).
-//   1. traverses dirs
-//   2. converts files
-//   3. shows logs and returns results
+// 1. traverses dirs
+// 2. converts files
+// 3. shows logs and returns results
 // Returns a list of results likes (with an error):
-//   [{0 dummy.jpg false} {2 dirA/figB.jpg true} {1 figA.jpg true} ...], nil
+//   [{0 dummy.jpg someErrorString} {2 dirA/figB.jpg <nil>} {1 figA.jpg <nil>} ...], <nil>
 func (dc *DirConv) Convert() ([]*Result, error) {
 	var results []*Result
 
@@ -63,17 +63,14 @@ func (dc *DirConv) Convert() ([]*Result, error) {
 
 			// do convert and check the result
 			err := ic.Convert()
-			ok := true
 			if err != nil {
-				ok = false
-				_, _ = fmt.Fprintln(os.Stderr, err)
 				log = fmt.Sprintf("[Failed] %s", log)
 			} else {
 				log = fmt.Sprintf("[OK] %s", log)
 			}
 
 			// make a new Result and append it to the results list
-			results = append(results, &Result{Index: idx, RelPath: val, IsOk: ok})
+			results = append(results, &Result{Index: idx, RelPath: val, Err: err})
 			fmt.Println(log)
 		}(i, *v)
 	}
