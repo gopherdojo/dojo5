@@ -72,16 +72,16 @@ func (dc *DirConv) Convert() ([]*Result, error) {
 			// make a new Result and append it to the results list
 			results = append(results, &Result{Index: idx, RelPath: val, Err: err})
 			fmt.Println(log)
-		}(i, *v)
+		}(i, v)
 	}
 	wg.Wait()
 
 	return results, nil
 }
 
-func (dc *DirConv) traverseImageFiles() ([]*string, error) {
+func (dc *DirConv) traverseImageFiles() ([]string, error) {
 	var (
-		files []*string
+		files []string
 		err   error
 	)
 
@@ -99,7 +99,7 @@ func (dc *DirConv) traverseImageFiles() ([]*string, error) {
 		func(path string, info os.FileInfo, err error) error {
 			relPath, err := filepath.Rel(dc.Dir, path)
 			if !info.IsDir() && err == nil && conv.ParseImgExt(relPath) == dc.SrcExt {
-				files = append(files, &relPath)
+				files = append(files, relPath)
 			}
 			return nil
 		})
