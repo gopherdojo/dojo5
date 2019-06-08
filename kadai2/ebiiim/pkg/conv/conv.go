@@ -69,36 +69,37 @@ func (ic *ImgConv) Convert() error {
 	return nil
 }
 
-func encodeImg(writer io.Writer, ext img.Ext, image *image.Image, options map[string]interface{}) (err error) {
+func encodeImg(writer io.Writer, ext img.Ext, pImage *image.Image, options map[string]interface{}) (err error) {
 	switch ext {
 	case img.JPEG:
 		// TODO: apply encoder options
-		err = jpeg.Encode(writer, *image, &jpeg.Options{})
+		err = jpeg.Encode(writer, *pImage, &jpeg.Options{})
 	case img.PNG:
-		err = png.Encode(writer, *image)
+		err = png.Encode(writer, *pImage)
 	case img.TIFF:
 		// TODO: apply encoder options
-		err = tiff.Encode(writer, *image, &tiff.Options{})
+		err = tiff.Encode(writer, *pImage, &tiff.Options{})
 	case img.BMP:
-		err = bmp.Encode(writer, *image)
+		err = bmp.Encode(writer, *pImage)
 	default:
-		err = fmt.Errorf("unsupported image extension %s", ext)
+		err = fmt.Errorf("unsupported pImage extension %s", ext)
 	}
 	return
 }
 
-func decodeImg(reader io.Reader, ext img.Ext) (image image.Image, err error) {
-	switch ext {
-	case img.JPEG:
-		image, err = jpeg.Decode(reader)
-	case img.PNG:
-		image, err = png.Decode(reader)
-	case img.TIFF:
-		image, err = tiff.Decode(reader)
-	case img.BMP:
-		image, err = bmp.Decode(reader)
-	default:
-		err = fmt.Errorf("unsupported image extension %s", ext)
+func decodeImg(reader io.Reader, ext img.Ext) (image.Image, error) {
+	vImage, format, err := image.Decode(reader)
+	if err != nil {
+		return vImage, errors.Wrap(err, "invalid image data")
 	}
-	return
+	// verify decoded image format
+	imgExt, err := img.ParseExt(format)
+	if err != nil {
+		return vImage, err
+	}
+	if imgExt != ext {
+		return vImage, fmt.Errorf("unexpected image format %s", format)
+	}
+
+	return vImage, err
 }
