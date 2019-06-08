@@ -37,13 +37,13 @@ type Result struct {
 //   3. shows logs and returns results
 // Returns a list of results likes (with an error):
 //   [{0 dummy.jpg false} {2 dirA/figB.jpg true} {1 figA.jpg true} ...], nil
-func (dc *DirConv) Convert() ([]Result, error) {
-	var results []Result
+func (dc *DirConv) Convert() ([]*Result, error) {
+	var results []*Result
 
 	// get file paths to convert
 	files, err := dc.traverseImageFiles()
 	if err != nil {
-		return []Result{}, errors.Wrapf(err, "failed to traverse %s", dc.Dir)
+		return []*Result{}, errors.Wrapf(err, "failed to traverse %s", dc.Dir)
 	}
 
 	// convert files (goroutined)
@@ -59,7 +59,7 @@ func (dc *DirConv) Convert() ([]Result, error) {
 			log := fmt.Sprintf("%s -> %s", oldFileName, newFileName)
 
 			// make a new ImgConv with file paths and file extensions
-			ic := conv.ImgConv{SrcPath: oldFileName, SrcExt: dc.SrcExt, TgtPath: newFileName, TgtExt: dc.TgtExt, Options: nil}
+			ic := &conv.ImgConv{SrcPath: oldFileName, SrcExt: dc.SrcExt, TgtPath: newFileName, TgtExt: dc.TgtExt, Options: nil}
 
 			// do convert and check the result
 			err := ic.Convert()
@@ -73,18 +73,18 @@ func (dc *DirConv) Convert() ([]Result, error) {
 			}
 
 			// make a new Result and append it to the results list
-			results = append(results, Result{Index: idx, RelPath: val, IsOk: ok})
+			results = append(results, &Result{Index: idx, RelPath: val, IsOk: ok})
 			fmt.Println(log)
-		}(i, v)
+		}(i, *v)
 	}
 	wg.Wait()
 
 	return results, nil
 }
 
-func (dc *DirConv) traverseImageFiles() ([]string, error) {
+func (dc *DirConv) traverseImageFiles() ([]*string, error) {
 	var (
-		files []string
+		files []*string
 		err   error
 	)
 
@@ -102,7 +102,7 @@ func (dc *DirConv) traverseImageFiles() ([]string, error) {
 		func(path string, info os.FileInfo, err error) error {
 			relPath, err := filepath.Rel(dc.Dir, path)
 			if !info.IsDir() && err == nil && conv.ParseImgExt(relPath) == dc.SrcExt {
-				files = append(files, relPath)
+				files = append(files, &relPath)
 			}
 			return nil
 		})
