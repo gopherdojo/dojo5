@@ -3,12 +3,13 @@ package dirconv
 import (
 	"fmt"
 	"log"
-	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 
 	"github.com/gopherdojo/dojo5/kadai2/ebiiim/pkg/conv"
+	"github.com/gopherdojo/dojo5/kadai2/ebiiim/pkg/dir"
+	"github.com/gopherdojo/dojo5/kadai2/ebiiim/pkg/img"
 	"github.com/pkg/errors"
 )
 
@@ -20,9 +21,9 @@ type DirConv struct {
 	// directory name to traverse
 	Dir string
 	// source extension
-	SrcExt conv.ImgExt
+	SrcExt img.Ext
 	// target extension
-	TgtExt conv.ImgExt
+	TgtExt img.Ext
 }
 
 // Result struct
@@ -45,7 +46,7 @@ func (dc *DirConv) Convert() ([]*Result, error) {
 	var results []*Result
 
 	// get file paths to convert
-	files, err := dc.traverseImageFiles()
+	files, err := dir.TraverseImageFiles(dc.Dir, dc.SrcExt)
 	if err != nil {
 		return []*Result{}, errors.Wrapf(err, "failed to traverse %s", dc.Dir)
 	}
@@ -83,31 +84,4 @@ func (dc *DirConv) Convert() ([]*Result, error) {
 	wg.Wait()
 
 	return results, nil
-}
-
-func (dc *DirConv) traverseImageFiles() ([]string, error) {
-	var (
-		files []string
-		err   error
-	)
-
-	// check the dir exists
-	fileInfo, err := os.Stat(dc.Dir)
-	if err != nil {
-		return files, err // if the dir does not exist, return an empty slice
-	}
-	if !fileInfo.IsDir() {
-		return files, fmt.Errorf("%s is not a directory", dc.Dir)
-	}
-
-	// traverse the dir and return a list of image files has the given file extension
-	err = filepath.Walk(dc.Dir,
-		func(path string, info os.FileInfo, err error) error {
-			relPath, err := filepath.Rel(dc.Dir, path)
-			if !info.IsDir() && err == nil && conv.ParseImgExt(relPath) == dc.SrcExt {
-				files = append(files, relPath)
-			}
-			return nil
-		})
-	return files, err
 }

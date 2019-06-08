@@ -6,10 +6,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/pkg/errors"
-
-	"github.com/gopherdojo/dojo5/kadai2/ebiiim/pkg/conv"
 	"github.com/gopherdojo/dojo5/kadai2/ebiiim/pkg/dirconv"
+	"github.com/gopherdojo/dojo5/kadai2/ebiiim/pkg/img"
+	"github.com/pkg/errors"
 )
 
 const usageSrcExt = `source extension (jpg, png, tiff, bmp)`
@@ -54,7 +53,7 @@ func ParseArgs(args []string) (*dirconv.DirConv, error) {
 		return &dirconv.DirConv{}, &NoArgsException{"please show usage"}
 	}
 
-	return &dirconv.DirConv{Dir: dir, SrcExt: conv.ParseImgExt(*srcExt), TgtExt: conv.ParseImgExt(*tgtExt)}, nil
+	return &dirconv.DirConv{Dir: dir, SrcExt: img.ParseExt(*srcExt), TgtExt: img.ParseExt(*tgtExt)}, nil
 }
 
 func main() {

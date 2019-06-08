@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/gopherdojo/dojo5/kadai2/ebiiim/pkg/conv"
+	"github.com/gopherdojo/dojo5/kadai2/ebiiim/pkg/img"
 )
 
 func TestImgConv_Convert(t *testing.T) {
@@ -32,28 +33,28 @@ func TestImgConv_Convert(t *testing.T) {
 	)
 
 	// normal: jpg -> png
-	ic = conv.ImgConv{SrcPath: f1, SrcExt: conv.ImgExtJPEG, TgtPath: f2, TgtExt: conv.ImgExtPNG, Options: nil}
+	ic = conv.ImgConv{SrcPath: f1, SrcExt: img.JPEG, TgtPath: f2, TgtExt: img.PNG, Options: nil}
 	err = ic.Convert()
 	if err != nil {
 		t.Errorf(e1)
 	}
 
 	// normal: png -> bmp
-	ic = conv.ImgConv{SrcPath: f2, SrcExt: conv.ImgExtPNG, TgtPath: f3, TgtExt: conv.ImgExtBMP, Options: nil}
+	ic = conv.ImgConv{SrcPath: f2, SrcExt: img.PNG, TgtPath: f3, TgtExt: img.BMP, Options: nil}
 	err = ic.Convert()
 	if err != nil {
 		t.Errorf(e1)
 	}
 
 	// normal: bmp -> tiff
-	ic = conv.ImgConv{SrcPath: f3, SrcExt: conv.ImgExtBMP, TgtPath: f4, TgtExt: conv.ImgExtTIFF, Options: nil}
+	ic = conv.ImgConv{SrcPath: f3, SrcExt: img.BMP, TgtPath: f4, TgtExt: img.TIFF, Options: nil}
 	err = ic.Convert()
 	if err != nil {
 		t.Errorf(e1)
 	}
 
 	// non-normal: jpg -> png
-	ic = conv.ImgConv{SrcPath: n1, SrcExt: conv.ImgExtJPEG, TgtPath: n2, TgtExt: conv.ImgExtPNG, Options: nil}
+	ic = conv.ImgConv{SrcPath: n1, SrcExt: img.JPEG, TgtPath: n2, TgtExt: img.PNG, Options: nil}
 	err = ic.Convert()
 	if err == nil {
 		t.Errorf(e1)
