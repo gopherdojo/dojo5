@@ -19,17 +19,17 @@ Arguments:
   -source_ext=<ext>` + "\t" + usageSrcExt + ` [default: jpg]
   -target_ext=<ext>` + "\t" + usageTgtExt + ` [default: png]`
 
-// NoArgsException is used when the program do not have args.
-type NoArgsException struct{ s string }
+// InvalidArgsException is used when the program do not have args.
+type InvalidArgsException struct{ s string }
 
-// Error returns a NoArgsException error message.
-func (e *NoArgsException) Error() string { return e.s }
+// Error returns a InvalidArgsException error message.
+func (e *InvalidArgsException) Error() string { return e.s }
 
-// NoArgs is used by IsNoArgs to check the interface.
-func (e *NoArgsException) NoArgs() bool { return true }
+// NoArgs is used by IsInvalidArgs to check the interface.
+func (e *InvalidArgsException) NoArgs() bool { return true }
 
-// IsNoArgs checks the given error implements NoArgsException or do not.
-func IsNoArgs(err error) bool {
+// IsInvalidArgs checks the given error implements InvalidArgsException or do not.
+func IsInvalidArgs(err error) bool {
 	b, ok := errors.Cause(err).(interface{ NoArgs() bool })
 	return ok && b.NoArgs()
 }
@@ -38,8 +38,8 @@ func IsNoArgs(err error) bool {
 func ParseArgs(args []string) (*dirconv.DirConv, error) {
 	flags := flag.NewFlagSet(args[0], flag.ExitOnError)
 	var (
-		srcExt = flags.String("source_ext", "jpg", usageSrcExt)
-		tgtExt = flags.String("target_ext", "png", usageTgtExt)
+		argSrcExt = flags.String("source_ext", "jpg", usageSrcExt)
+		argTgtExt = flags.String("target_ext", "png", usageTgtExt)
 	)
 	err := flags.Parse(args[1:])
 	if err != nil {
@@ -47,13 +47,20 @@ func ParseArgs(args []string) (*dirconv.DirConv, error) {
 	}
 
 	dir := flags.Arg(0) // get the first dir name only
-
-	// if no args, return an NoArgsException indicates the program should show an usage message
 	if len(dir) == 0 {
-		return &dirconv.DirConv{}, &NoArgsException{"please show usage"}
+		return &dirconv.DirConv{}, &InvalidArgsException{"no directory specified"}
 	}
 
-	return &dirconv.DirConv{Dir: dir, SrcExt: img.ParseExt(*srcExt), TgtExt: img.ParseExt(*tgtExt)}, nil
+	srcExt, err := img.ParseExt(*argSrcExt)
+	if err != nil {
+		return &dirconv.DirConv{}, &InvalidArgsException{"invalid source extension"}
+	}
+	tgtExt, err := img.ParseExt(*argTgtExt)
+	if err != nil {
+		return &dirconv.DirConv{}, &InvalidArgsException{"invalid target extension"}
+	}
+
+	return &dirconv.DirConv{Dir: dir, SrcExt: srcExt, TgtExt: tgtExt}, nil
 }
 
 func main() {
@@ -61,10 +68,11 @@ func main() {
 
 	dc, err := ParseArgs(os.Args)
 	if err != nil {
-		if IsNoArgs(err) {
+		if IsInvalidArgs(err) {
 			// show usage if no dir specified
 			fmt.Fprintf(os.Stdout, "%s\n", usage)
 		} else {
+			// unexpected error
 			fmt.Fprintf(os.Stderr, "%v", err)
 		}
 		os.Exit(0)

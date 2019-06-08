@@ -8,6 +8,7 @@ import (
 	"github.com/gopherdojo/dojo5/kadai2/ebiiim/pkg/img"
 )
 
+// TraverseImageFiles walks the specified directory and returns a list of image files which with the specified extension.
 func TraverseImageFiles(targetDir string, ext img.Ext) ([]string, error) {
 	var (
 		files []string
@@ -23,11 +24,12 @@ func TraverseImageFiles(targetDir string, ext img.Ext) ([]string, error) {
 		return files, fmt.Errorf("%s is not a directory", targetDir)
 	}
 
-	// traverse the dir and return a list of image files has the given file extension
+	// traverse the dir and return a list of image files with the given file extension
 	err = filepath.Walk(targetDir,
 		func(path string, info os.FileInfo, err error) error {
 			relPath, err := filepath.Rel(targetDir, path)
-			if !info.IsDir() && err == nil && img.ParseExt(relPath) == ext {
+			fileExt, _ := img.ParseExt(relPath) // error can be ignored (only the specified Ext is accepted)
+			if !info.IsDir() && err == nil && fileExt == ext {
 				files = append(files, relPath)
 			}
 			return nil
