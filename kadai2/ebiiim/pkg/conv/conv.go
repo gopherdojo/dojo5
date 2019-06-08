@@ -37,16 +37,13 @@ func (ic *ImgConv) Convert() error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to open %s", ic.SrcPath)
 	}
-	defer func() {
-		dErr := srcFile.Close()
-		if dErr != nil {
-			err = errors.Wrapf(err, "failed to close %v", dErr)
-		}
-	}()
-
 	srcImg, err := decodeImg(srcFile, ic.SrcExt)
 	if err != nil {
 		return errors.Wrapf(err, "failed to decode %s", ic.SrcPath)
+	}
+	err = srcFile.Close()
+	if err != nil {
+		return errors.Wrapf(err, "failed to close %v", err)
 	}
 
 	// write encoded image to the target file
@@ -54,13 +51,6 @@ func (ic *ImgConv) Convert() error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to create %s", ic.TgtPath)
 	}
-	defer func() {
-		dErr := tgtFile.Close()
-		if dErr != nil {
-			err = errors.Wrapf(err, "failed to close %v", dErr)
-		}
-	}()
-
 	err = encodeImg(tgtFile, ic.TgtExt, &srcImg, ic.Options)
 	if err != nil {
 		rErr := os.Remove(ic.TgtPath)
@@ -68,6 +58,10 @@ func (ic *ImgConv) Convert() error {
 			err = errors.Wrapf(err, "failed to remove %v", rErr)
 		}
 		return errors.Wrapf(err, "failed to encode %s", ic.SrcPath)
+	}
+	err = tgtFile.Close()
+	if err != nil {
+		return errors.Wrapf(err, "failed to close %v", err)
 	}
 
 	return nil
