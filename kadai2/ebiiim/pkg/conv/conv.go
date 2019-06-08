@@ -7,6 +7,7 @@ import (
 	"image/png"
 	"os"
 
+	"github.com/pkg/errors"
 	"golang.org/x/image/bmp"
 	"golang.org/x/image/tiff"
 )
@@ -31,31 +32,31 @@ type ImgConv struct {
 func (ic *ImgConv) Convert() error {
 
 	// load the source image
-	srcFile, err := os.OpenFile(ic.SrcPath, os.O_RDONLY, 0600)
+	srcFile, err := os.Open(ic.SrcPath)
 	if err != nil {
-		return fmt.Errorf("failed to open: %s", ic.SrcPath)
+		return errors.Wrapf(err, "failed to open %s", ic.SrcPath)
 	}
 	defer func() {
 		dErr := srcFile.Close()
 		if dErr != nil {
-			err = fmt.Errorf("failed to close: %v (%v)", dErr, err)
+			err = errors.Wrapf(err, "failed to close %v", dErr)
 		}
 	}()
 
 	srcImg, err := decodeImg(srcFile, ic.SrcExt)
 	if err != nil {
-		return fmt.Errorf("failed to decode: %s", ic.SrcPath)
+		return errors.Wrapf(err, "failed to decode %s", ic.SrcPath)
 	}
 
 	// write encoded image to the target file
 	tgtFile, err := os.Create(ic.TgtPath)
 	if err != nil {
-		return fmt.Errorf("failed to create : %s", ic.TgtPath)
+		return errors.Wrapf(err, "failed to create %s", ic.TgtPath)
 	}
 	defer func() {
 		dErr := tgtFile.Close()
 		if dErr != nil {
-			err = fmt.Errorf("failed to close: %v (%v)", dErr, err)
+			err = errors.Wrapf(err, "failed to close %v", dErr)
 		}
 	}()
 
@@ -63,9 +64,9 @@ func (ic *ImgConv) Convert() error {
 	if err != nil {
 		rErr := os.Remove(ic.TgtPath)
 		if rErr != nil {
-			err = fmt.Errorf("failed to remove: %v (%v)", rErr, err)
+			err = errors.Wrapf(err, "failed to remove %v", rErr)
 		}
-		return fmt.Errorf("failed to encode: %s", ic.SrcPath)
+		return errors.Wrapf(err, "failed to encode %s", ic.SrcPath)
 	}
 
 	return nil
@@ -84,7 +85,7 @@ func encodeImg(file *os.File, ext ImgExt, img *image.Image, options map[string]i
 	case ImgExtBMP:
 		err = bmp.Encode(file, *img)
 	default:
-		err = fmt.Errorf("unsupported image extension: %s", ext)
+		err = fmt.Errorf("unsupported image extension %s", ext)
 	}
 	return
 }
@@ -100,7 +101,7 @@ func decodeImg(file *os.File, ext ImgExt) (img image.Image, err error) {
 	case ImgExtBMP:
 		img, err = bmp.Decode(file)
 	default:
-		err = fmt.Errorf("unsupported image extension: %s", ext)
+		err = fmt.Errorf("unsupported image extension %s", ext)
 	}
 	return
 }
