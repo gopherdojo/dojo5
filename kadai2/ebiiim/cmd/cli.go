@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/pkg/errors"
@@ -57,6 +58,8 @@ func ParseArgs(args []string) (*dirconv.DirConv, error) {
 }
 
 func main() {
+	dirconv.Logger = log.New(os.Stdout, fmt.Sprintf("%s ", os.Args[0]), log.LstdFlags)
+
 	dc, err := ParseArgs(os.Args)
 	if err != nil {
 		if IsNoArgs(err) {
@@ -67,12 +70,9 @@ func main() {
 		}
 		os.Exit(0)
 	}
-	results, err := dc.Convert()
+	_, err = dc.Convert()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		os.Exit(0)
-	}
-	for _, r := range results {
-		fmt.Printf("%v", *r)
 	}
 }

@@ -2,6 +2,7 @@ package dirconv
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,6 +11,9 @@ import (
 	"github.com/gopherdojo/dojo5/kadai2/ebiiim/pkg/conv"
 	"github.com/pkg/errors"
 )
+
+// Logger outputs logs one after another during Convert.
+var Logger *log.Logger
 
 // DirConv struct
 type DirConv struct {
@@ -56,7 +60,7 @@ func (dc *DirConv) Convert() ([]*Result, error) {
 			// make file paths
 			oldFileName := filepath.Join(dc.Dir, val)
 			newFileName := fmt.Sprintf("%s.%s", strings.TrimSuffix(oldFileName, filepath.Ext(oldFileName)), dc.TgtExt)
-			log := fmt.Sprintf("%s -> %s", oldFileName, newFileName)
+			logStr := fmt.Sprintf("%s -> %s", oldFileName, newFileName)
 
 			// make a new ImgConv with file paths and file extensions
 			ic := &conv.ImgConv{SrcPath: oldFileName, SrcExt: dc.SrcExt, TgtPath: newFileName, TgtExt: dc.TgtExt, Options: nil}
@@ -64,14 +68,16 @@ func (dc *DirConv) Convert() ([]*Result, error) {
 			// do convert and check the result
 			err := ic.Convert()
 			if err != nil {
-				log = fmt.Sprintf("[Failed] %s", log)
+				logStr = fmt.Sprintf("[Failed] %s", logStr)
 			} else {
-				log = fmt.Sprintf("[OK] %s", log)
+				logStr = fmt.Sprintf("[OK] %s", logStr)
 			}
 
 			// make a new Result and append it to the results list
 			results = append(results, &Result{Index: idx, RelPath: val, Err: err})
-			fmt.Println(log)
+			if Logger != nil {
+				Logger.Printf("%s\n", logStr)
+			}
 		}(i, v)
 	}
 	wg.Wait()
