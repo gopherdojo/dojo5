@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/gopherdojo/dojo5/kadai2/ebiiim/pkg/conv"
+	"github.com/pkg/errors"
 )
 
 // DirConv struct
@@ -34,27 +35,26 @@ type Result struct {
 //   1. traverses dirs
 //   2. converts files
 //   3. shows logs and returns results
-// Returns a list of results likes:
-//   [{0 dummy.jpg false} {2 dirA/figB.jpg true} {1 figA.jpg true} ...]
-func (dc DirConv) Convert() []Result {
+// Returns a list of results likes (with an error):
+//   [{0 dummy.jpg false} {2 dirA/figB.jpg true} {1 figA.jpg true} ...], nil
+func (dc *DirConv) Convert() ([]Result, error) {
 	var results []Result
 
 	// get file paths to convert
 	files, err := dc.traverseImageFiles()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(0)
+		return []Result{}, errors.Wrapf(err, "failed to traverse %s", dc.Dir)
 	}
 
 	// convert files (goroutined)
-	wg := &sync.WaitGroup{}
+	var wg sync.WaitGroup
 	for i, v := range files {
 		wg.Add(1)
 		go func(idx int, val string) {
 			defer wg.Done()
 
 			// make file paths
-			oldFileName := fmt.Sprintf("%s/%s", dc.Dir, val)
+			oldFileName := filepath.Join(dc.Dir, val)
 			newFileName := fmt.Sprintf("%s.%s", strings.TrimSuffix(oldFileName, filepath.Ext(oldFileName)), dc.TgtExt)
 			log := fmt.Sprintf("%s -> %s", oldFileName, newFileName)
 
@@ -79,7 +79,7 @@ func (dc DirConv) Convert() []Result {
 	}
 	wg.Wait()
 
-	return results
+	return results, nil
 }
 
 func (dc *DirConv) traverseImageFiles() ([]string, error) {

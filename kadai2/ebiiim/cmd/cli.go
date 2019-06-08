@@ -67,5 +67,8 @@ func main() {
 		}
 		os.Exit(0)
 	}
-	dc.Convert()
+	_, err = dc.Convert()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v", err)
+	}
 }
