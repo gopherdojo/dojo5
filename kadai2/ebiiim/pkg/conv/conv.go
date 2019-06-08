@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/jpeg"
 	"image/png"
+	"io"
 	"os"
 
 	"github.com/pkg/errors"
@@ -72,34 +73,34 @@ func (ic *ImgConv) Convert() error {
 	return nil
 }
 
-func encodeImg(file *os.File, ext ImgExt, img *image.Image, options map[string]interface{}) (err error) {
+func encodeImg(writer io.Writer, ext ImgExt, img *image.Image, options map[string]interface{}) (err error) {
 	switch ext {
 	case ImgExtJPEG:
 		// TODO: apply encoder options
-		err = jpeg.Encode(file, *img, &jpeg.Options{})
+		err = jpeg.Encode(writer, *img, &jpeg.Options{})
 	case ImgExtPNG:
-		err = png.Encode(file, *img)
+		err = png.Encode(writer, *img)
 	case ImgExtTIFF:
 		// TODO: apply encoder options
-		err = tiff.Encode(file, *img, &tiff.Options{})
+		err = tiff.Encode(writer, *img, &tiff.Options{})
 	case ImgExtBMP:
-		err = bmp.Encode(file, *img)
+		err = bmp.Encode(writer, *img)
 	default:
 		err = fmt.Errorf("unsupported image extension %s", ext)
 	}
 	return
 }
 
-func decodeImg(file *os.File, ext ImgExt) (img image.Image, err error) {
+func decodeImg(reader io.Reader, ext ImgExt) (img image.Image, err error) {
 	switch ext {
 	case ImgExtJPEG:
-		img, err = jpeg.Decode(file)
+		img, err = jpeg.Decode(reader)
 	case ImgExtPNG:
-		img, err = png.Decode(file)
+		img, err = png.Decode(reader)
 	case ImgExtTIFF:
-		img, err = tiff.Decode(file)
+		img, err = tiff.Decode(reader)
 	case ImgExtBMP:
-		img, err = bmp.Decode(file)
+		img, err = bmp.Decode(reader)
 	default:
 		err = fmt.Errorf("unsupported image extension %s", ext)
 	}
