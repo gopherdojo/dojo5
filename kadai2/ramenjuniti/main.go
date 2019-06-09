@@ -43,17 +43,17 @@ func main() {
 	for _, arg := range args {
 		targets, err := target.Get(arg, *in)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 
 		for _, t := range targets {
 			img, err := imgconv.Decode(t)
 			if err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 
 			if err = img.Encode(*out); err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 		}
 	}
