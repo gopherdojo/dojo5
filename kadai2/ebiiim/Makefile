@@ -1,6 +1,6 @@
 ROOT=github.com/gopherdojo/dojo5/kadai2/ebiiim
 BIN=bin/imgconv
-MAIN=cmd/cli.go
+MAIN=main.go
 TEST=...
 
 CMD_ALL=all

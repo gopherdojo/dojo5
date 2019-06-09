@@ -1,10 +1,8 @@
-package main
+// Package cli provides a command line parser to generate new DirConv instances.
+package cli
 
 import (
 	"flag"
-	"fmt"
-	"log"
-	"os"
 
 	"github.com/gopherdojo/dojo5/kadai2/ebiiim/pkg/dirconv"
 	"github.com/gopherdojo/dojo5/kadai2/ebiiim/pkg/img"
@@ -13,7 +11,9 @@ import (
 
 const usageSrcExt = `source extension (jpg, png, tiff, bmp)`
 const usageTgtExt = `target extension (jpg, png, tiff, bmp)`
-const usage = `Usage:
+
+// Usage string
+const Usage = `Usage:
   imgconv [-source_ext=<ext>] [-target_ext=<ext>] DIR
 Arguments:
   -source_ext=<ext>` + "\t" + usageSrcExt + ` [default: jpg]
@@ -61,25 +61,4 @@ func ParseArgs(args []string) (*dirconv.DirConv, error) {
 	}
 
 	return &dirconv.DirConv{Dir: dir, SrcExt: srcExt, TgtExt: tgtExt}, nil
-}
-
-func main() {
-	dirconv.Logger = log.New(os.Stdout, fmt.Sprintf("%s ", os.Args[0]), log.LstdFlags)
-
-	dc, err := ParseArgs(os.Args)
-	if err != nil {
-		if IsInvalidArgs(err) {
-			// show usage if no dir specified
-			fmt.Fprintf(os.Stdout, "%s\n", usage)
-		} else {
-			// unexpected error
-			fmt.Fprintf(os.Stderr, "%v", err)
-		}
-		os.Exit(0)
-	}
-	_, err = dc.Convert()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v", err)
-		os.Exit(0)
-	}
 }
