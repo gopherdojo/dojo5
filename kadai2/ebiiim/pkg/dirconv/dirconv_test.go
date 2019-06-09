@@ -2,11 +2,18 @@ package dirconv_test
 
 import (
 	"fmt"
+	"sort"
 	"testing"
 
 	"github.com/gopherdojo/dojo5/kadai2/ebiiim/pkg/dirconv"
 	"github.com/gopherdojo/dojo5/kadai2/ebiiim/pkg/img"
 )
+
+func sortResultsByIndex(results []*dirconv.Result) {
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].Index < results[j].Index
+	})
+}
 
 func TestDirConv_Convert(t *testing.T) {
 	cases := []struct {
@@ -34,7 +41,8 @@ func TestDirConv_Convert(t *testing.T) {
 				t.Errorf("input %s, want %v(isErr), got %v", c.dir, c.isErr, err)
 			}
 			// verify results
-			// TODO: sort results by Result.Index
+			sortResultsByIndex(c.results)
+			sortResultsByIndex(results)
 			for i, r := range results {
 				if r.Index != c.results[i].Index ||
 					r.RelPath != c.results[i].RelPath ||
