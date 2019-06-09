@@ -47,7 +47,8 @@ func TestImgConv_Convert(t *testing.T) {
 		{name: "F_invalid_jpg2tiff", src: n1, srcExt: img.JPEG, tgt: n3, tgtExt: img.TIFF, opt: nil, isErr: true},
 		{name: "F_invalid_png2tiff", src: n2, srcExt: img.PNG, tgt: n3, tgtExt: img.TIFF, opt: nil, isErr: true},
 		{name: "F_not_found", src: "../testdata/notFound.jpg", srcExt: img.JPEG, tgt: "../testdata/notFound.tif", tgtExt: img.TIFF, opt: nil, isErr: true},
-		{name: "F_is_dir", src: "../testdata", srcExt: img.JPEG, tgt: "../testdata.tif", tgtExt: img.TIFF, opt: nil, isErr: true},
+		{name: "F_src_is_dir", src: "../testdata", srcExt: img.JPEG, tgt: "../testdata.tif", tgtExt: img.TIFF, opt: nil, isErr: true},
+		{name: "F_tgt_is_dir", src: f1, srcExt: img.JPEG, tgt: "../testdata", tgtExt: img.TIFF, opt: nil, isErr: true},
 	}
 	// NOTE: this test cannot be run in parallel
 	for _, c := range cases {
@@ -55,6 +56,18 @@ func TestImgConv_Convert(t *testing.T) {
 		err := ic.Convert()
 		if !((err != nil) == c.isErr) {
 			t.Errorf("ImgConv %v, want %v(isErr), got %v", ic, c.isErr, err)
+		}
+		// verify file
+		stat, err := os.Stat(c.tgt)
+		switch c.isErr {
+		case true: // WHEN c.isErr THEN (file does not exist) or (file is a dir)
+			if !(err != nil || stat.IsDir()) {
+				t.Errorf("failed delete %s", c.tgt)
+			}
+		case false: // WHEN !c.isErr THEN (file exists) and (file is not a dir)
+			if !(err == nil && !stat.IsDir()) {
+				t.Errorf("file does not found %s", c.tgt)
+			}
 		}
 	}
 }
