@@ -67,11 +67,12 @@ func (dc *DirConv) Convert() ([]*Result, error) {
 			newFileName := fmt.Sprintf("%s.%s", strings.TrimSuffix(oldFileName, filepath.Ext(oldFileName)), dc.TgtExt)
 			logStr := fmt.Sprintf("%s -> %s", oldFileName, newFileName)
 
-			// make a new ImgConv with file paths and file extensions
-			ic := &conv.ImgConv{SrcPath: oldFileName, SrcExt: dc.SrcExt, TgtPath: newFileName, TgtExt: dc.TgtExt, Options: nil}
+			// make a new Converter and initialize it
+			var converter conv.Converter
+			converter = &conv.ImgConv{SrcPath: oldFileName, SrcExt: dc.SrcExt, TgtPath: newFileName, TgtExt: dc.TgtExt, Options: nil}
 
 			// do convert and check the result
-			err := ic.Convert()
+			err := converter.Convert()
 			if err != nil {
 				logStr = fmt.Sprintf("[Failed] %s", logStr)
 			} else {

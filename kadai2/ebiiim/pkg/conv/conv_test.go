@@ -52,10 +52,11 @@ func TestImgConv_Convert(t *testing.T) {
 	}
 	// NOTE: this test cannot be run in parallel
 	for _, c := range cases {
-		ic := &conv.ImgConv{SrcPath: c.src, SrcExt: c.srcExt, TgtPath: c.tgt, TgtExt: c.tgtExt, Options: c.opt}
-		err := ic.Convert()
+		var converter conv.Converter
+		converter = &conv.ImgConv{SrcPath: c.src, SrcExt: c.srcExt, TgtPath: c.tgt, TgtExt: c.tgtExt, Options: c.opt}
+		err := converter.Convert()
 		if !((err != nil) == c.isErr) {
-			t.Errorf("ImgConv %v, want %v(isErr), got %v", ic, c.isErr, err)
+			t.Errorf("ImgConv %v, want %v(isErr), got %v", converter, c.isErr, err)
 		}
 		// verify file
 		stat, err := os.Stat(c.tgt)

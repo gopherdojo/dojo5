@@ -15,6 +15,11 @@ import (
 	"golang.org/x/image/tiff"
 )
 
+// Converter interface provides Convert function with error for image conversion.
+type Converter interface {
+	Convert() error
+}
+
 // ImgConv struct holds two paths and converter options.
 type ImgConv struct {
 	// source path e.g. `path/to/A.jpg`
