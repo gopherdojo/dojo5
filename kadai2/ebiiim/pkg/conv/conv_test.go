@@ -8,55 +8,53 @@ import (
 	"github.com/gopherdojo/dojo5/kadai2/ebiiim/pkg/img"
 )
 
+func removeFile(t *testing.T, path string) {
+	t.Helper()
+	err := os.Remove(path)
+	if err != nil {
+		t.Errorf("failed to remove file %v %v", path, err)
+	}
+}
+
 func TestImgConv_Convert(t *testing.T) {
 	const (
 		f1 = "../testdata/gopherA.jpg"
 		f2 = "../testdata/gopherA.png"
 		f3 = "../testdata/gopherA.bmp"
-		f4 = "../testdata/gopherA.tiff"
+		f4 = "../testdata/gopherA.tif"
 
 		n1 = "../testdata/dummy.jpg"
 		n2 = "../testdata/dummy.png"
-
-		e1 = "unexpected behavior"
+		n3 = "../testdata/dummy.tif"
 	)
-
 	defer func() {
-		os.Remove(f2)
-		os.Remove(f3)
-		os.Remove(f4)
+		removeFile(t, f2)
+		removeFile(t, f3)
+		removeFile(t, f4)
 	}()
-
-	var (
-		ic  conv.ImgConv
-		err error
-	)
-
-	// normal: jpg -> png
-	ic = conv.ImgConv{SrcPath: f1, SrcExt: img.JPEG, TgtPath: f2, TgtExt: img.PNG, Options: nil}
-	err = ic.Convert()
-	if err != nil {
-		t.Errorf(e1)
+	cases := []struct {
+		name   string
+		src    string
+		srcExt img.Ext
+		tgt    string
+		tgtExt img.Ext
+		opt    map[string]interface{}
+		isErr  bool
+	}{
+		{name: "jpg2png", src: f1, srcExt: img.JPEG, tgt: f2, tgtExt: img.PNG, opt: nil, isErr: false},
+		{name: "png2bmp", src: f2, srcExt: img.PNG, tgt: f3, tgtExt: img.BMP, opt: nil, isErr: false},
+		{name: "bmp2tif", src: f3, srcExt: img.BMP, tgt: f4, tgtExt: img.TIFF, opt: nil, isErr: false},
+		{name: "F_invalid_jpg2tiff", src: n1, srcExt: img.JPEG, tgt: n3, tgtExt: img.TIFF, opt: nil, isErr: true},
+		{name: "F_invalid_png2tiff", src: n2, srcExt: img.PNG, tgt: n3, tgtExt: img.TIFF, opt: nil, isErr: true},
+		{name: "F_not_found", src: "../testdata/notFound.jpg", srcExt: img.JPEG, tgt: "../testdata/notFound.tif", tgtExt: img.TIFF, opt: nil, isErr: true},
+		{name: "F_is_dir", src: "../testdata", srcExt: img.JPEG, tgt: "../testdata.tif", tgtExt: img.TIFF, opt: nil, isErr: true},
 	}
-
-	// normal: png -> bmp
-	ic = conv.ImgConv{SrcPath: f2, SrcExt: img.PNG, TgtPath: f3, TgtExt: img.BMP, Options: nil}
-	err = ic.Convert()
-	if err != nil {
-		t.Errorf(e1)
-	}
-
-	// normal: bmp -> tiff
-	ic = conv.ImgConv{SrcPath: f3, SrcExt: img.BMP, TgtPath: f4, TgtExt: img.TIFF, Options: nil}
-	err = ic.Convert()
-	if err != nil {
-		t.Errorf(e1)
-	}
-
-	// non-normal: jpg -> png
-	ic = conv.ImgConv{SrcPath: n1, SrcExt: img.JPEG, TgtPath: n2, TgtExt: img.PNG, Options: nil}
-	err = ic.Convert()
-	if err == nil {
-		t.Errorf(e1)
+	// NOTE: this test cannot be run in parallel
+	for _, c := range cases {
+		ic := &conv.ImgConv{SrcPath: c.src, SrcExt: c.srcExt, TgtPath: c.tgt, TgtExt: c.tgtExt, Options: c.opt}
+		err := ic.Convert()
+		if !((err != nil) == c.isErr) {
+			t.Errorf("ImgConv %v, want %v(isErr), got %v", ic, c.isErr, err)
+		}
 	}
 }

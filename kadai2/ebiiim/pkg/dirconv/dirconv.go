@@ -55,6 +55,7 @@ func (dc *DirConv) Convert() ([]*Result, error) {
 	}
 
 	// convert files (goroutined)
+	// FIXME: data races
 	var wg sync.WaitGroup
 	for i, v := range files {
 		wg.Add(1)

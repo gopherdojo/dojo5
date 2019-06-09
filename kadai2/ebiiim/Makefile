@@ -1,7 +1,7 @@
 ROOT=github.com/gopherdojo/dojo5/kadai2/ebiiim
 BIN=bin/imgconv
 MAIN=main.go
-TEST=...
+TEST=pkg/...
 
 CMD_ALL=all
 CMD_BUILD=build

@@ -25,13 +25,13 @@ type InvalidArgsException struct{ s string }
 // Error returns a InvalidArgsException error message.
 func (e *InvalidArgsException) Error() string { return e.s }
 
-// NoArgs is used by IsInvalidArgs to check the interface.
-func (e *InvalidArgsException) NoArgs() bool { return true }
+// InvalidArgs is used by IsInvalidArgs to check the interface.
+func (e *InvalidArgsException) InvalidArgs() bool { return true }
 
 // IsInvalidArgs checks the given error implements InvalidArgsException or do not.
 func IsInvalidArgs(err error) bool {
-	b, ok := errors.Cause(err).(interface{ NoArgs() bool })
-	return ok && b.NoArgs()
+	b, ok := errors.Cause(err).(interface{ InvalidArgs() bool })
+	return ok && b.InvalidArgs()
 }
 
 // ParseArgs initializes a DirConv struct with given command line arguments.
