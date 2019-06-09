@@ -2,68 +2,11 @@ package imgconv
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strings"
+	"reflect"
 	"testing"
 )
 
-func TestSupportSrcImgTypes_IsSupport(t *testing.T) {
-	allSupportImgTypes := GetSupportSrcImgTypes()
-
-	type args struct {
-		imgType string
-	}
-	tests := []struct {
-		name  string
-		ssits SupportSrcImgTypes
-		args  args
-		want  bool
-	}{
-		{
-			"no supported img type",
-			allSupportImgTypes,
-			args{"aaa"},
-			false,
-		},
-		{
-			"no supported img type",
-			allSupportImgTypes,
-			args{"png"},
-			true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.ssits.IsSupport(ImgType(tt.args.imgType)); got != tt.want {
-				t.Errorf("SupportSrcImgTypes.IsSupport() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-var (
-	testdataDir = "./testdata"
-	// orgFilesDir contains:
-	// - textFile.txt
-	// - textFileRenameToPNG.png
-	// - validGIF.gif
-	// - validJPEG.jpg
-	// - validPNG.png
-	orgFilesDir = testdataDir + "/orgFiles"
-	orgFiles    = paths{
-		orgFilesDir + "/textFile.txt",
-		orgFilesDir + "/textFileRenameToPNG.png",
-		orgFilesDir + "/validGIF.gif",
-		orgFilesDir + "/validJPEG.jpg",
-		orgFilesDir + "/validPNG.png",
-	}
-	rootForTestDir = testdataDir + "/rootForTest"
-	subDir         = rootForTestDir + "/subdir"
-)
-
-func Test_converter_convert(t *testing.T) {
+func TestConverter_ConvertDir(t *testing.T) {
 	testDirs := paths{rootForTestDir, subDir}
 	noAffectedFiles := paths{
 		rootForTestDir + "/textFile.txt",
@@ -74,42 +17,52 @@ func Test_converter_convert(t *testing.T) {
 	}
 
 	type fields struct {
-		dirPath     string
-		srcImgType  ImgType
-		destImgType ImgType
-		destImgExt  ImgExt
-		skipErr     bool
-		decoder     Decoder
-		encoder     Encoder
+		DestImgExt ImgExt
+		SkipErr    bool
+		KeepSrcImg bool
+		Dec        Decoder
+		Enc        Encoder
 	}
+
+	type args struct {
+		srcImgType ImgType
+		dirPath    string
+	}
+
 	tests := []struct {
 		name   string
 		fields fields
+		args   args
+		// ensure correct image type after converted
+		expectImgType ImgType
 		// ensure target images were deleted after converted
-		expectDeletedImgs []string
+		wantDeletedImgs []string
 		// ensure imgs were convert correctly
 		// and no file was deleted after converted
-		expectConvertedImgs []string
-		wantErr             bool
+		wantConvertedImgs []string
+		wantErr           bool
 	}{
-		// convert without error
+		// convert without error, no keep org img
 		{
 			name: "jpg to png",
 			fields: fields{
-				dirPath:     rootForTestDir,
-				srcImgType:  ImgTypeJPEG,
-				destImgType: ImgTypePNG,
-				destImgExt:  "png",
-				skipErr:     false,
-				decoder:     GetDecoder(ImgTypeJPEG),
-				encoder:     GetEncoder(ImgTypePNG),
+				DestImgExt: "png",
+				SkipErr:    false,
+				KeepSrcImg: false,
+				Dec:        JPEGDecoder{},
+				Enc:        PNGEncoder{},
 			},
-			expectDeletedImgs: paths{
+			args: args{
+				srcImgType: "jpeg",
+				dirPath:    rootForTestDir,
+			},
+			expectImgType: "png",
+			wantDeletedImgs: paths{
 				// converted image
 				rootForTestDir + "/validJPEG.jpg",
 				subDir + "/validJPEG.jpg",
 			},
-			expectConvertedImgs: paths{
+			wantConvertedImgs: paths{
 				// converted image
 				rootForTestDir + "/validJPEG.png",
 				subDir + "/validJPEG.png",
@@ -119,20 +72,23 @@ func Test_converter_convert(t *testing.T) {
 		{
 			name: "jpg to gif",
 			fields: fields{
-				dirPath:     rootForTestDir,
-				srcImgType:  ImgTypeJPEG,
-				destImgType: ImgTypeGIF,
-				destImgExt:  "gif",
-				skipErr:     false,
-				decoder:     GetDecoder(ImgTypeJPEG),
-				encoder:     GetEncoder(ImgTypeGIF),
+				DestImgExt: "gif",
+				SkipErr:    false,
+				KeepSrcImg: false,
+				Dec:        JPEGDecoder{},
+				Enc:        GIFEncoder{},
 			},
-			expectDeletedImgs: paths{
+			args: args{
+				srcImgType: "jpeg",
+				dirPath:    rootForTestDir,
+			},
+			expectImgType: "gif",
+			wantDeletedImgs: paths{
 				// converted image
 				rootForTestDir + "/validJPEG.jpg",
 				subDir + "/validJPEG.jpg",
 			},
-			expectConvertedImgs: paths{
+			wantConvertedImgs: paths{
 				// converted image
 				rootForTestDir + "/validJPEG.gif",
 				subDir + "/validJPEG.gif",
@@ -142,20 +98,23 @@ func Test_converter_convert(t *testing.T) {
 		{
 			name: "gif to jpg",
 			fields: fields{
-				dirPath:     rootForTestDir,
-				srcImgType:  ImgTypeGIF,
-				destImgType: ImgTypeJPEG,
-				destImgExt:  "jpg",
-				skipErr:     false,
-				decoder:     GetDecoder(ImgTypeGIF),
-				encoder:     GetEncoder(ImgTypeJPEG),
+				DestImgExt: "jpg",
+				SkipErr:    false,
+				KeepSrcImg: false,
+				Dec:        GIFDecoder{},
+				Enc:        JPEGEncoder{},
 			},
-			expectDeletedImgs: paths{
+			args: args{
+				srcImgType: "gif",
+				dirPath:    rootForTestDir,
+			},
+			expectImgType: "jpeg",
+			wantDeletedImgs: paths{
 				// converted image
 				rootForTestDir + "/validGIF.gif",
 				subDir + "/validGIF.gif",
 			},
-			expectConvertedImgs: paths{
+			wantConvertedImgs: paths{
 				// converted image
 				rootForTestDir + "/validGIF.jpg",
 				subDir + "/validGIF.jpg",
@@ -165,20 +124,23 @@ func Test_converter_convert(t *testing.T) {
 		{
 			name: "gif to png",
 			fields: fields{
-				dirPath:     rootForTestDir,
-				srcImgType:  ImgTypeGIF,
-				destImgType: ImgTypePNG,
-				destImgExt:  "png",
-				skipErr:     false,
-				decoder:     GetDecoder(ImgTypeGIF),
-				encoder:     GetEncoder(ImgTypePNG),
+				DestImgExt: "png",
+				SkipErr:    false,
+				KeepSrcImg: false,
+				Dec:        GIFDecoder{},
+				Enc:        PNGEncoder{},
 			},
-			expectDeletedImgs: paths{
+			args: args{
+				srcImgType: "gif",
+				dirPath:    rootForTestDir,
+			},
+			expectImgType: "png",
+			wantDeletedImgs: paths{
 				// converted image
 				rootForTestDir + "/validGIF.gif",
 				subDir + "/validGIF.gif",
 			},
-			expectConvertedImgs: paths{
+			wantConvertedImgs: paths{
 				// converted image
 				rootForTestDir + "/validGIF.png",
 				subDir + "/validGIF.png",
@@ -188,20 +150,23 @@ func Test_converter_convert(t *testing.T) {
 		{
 			name: "png to gif",
 			fields: fields{
-				dirPath:     rootForTestDir,
-				srcImgType:  ImgTypePNG,
-				destImgType: ImgTypeGIF,
-				destImgExt:  "gif",
-				skipErr:     false,
-				decoder:     GetDecoder(ImgTypePNG),
-				encoder:     GetEncoder(ImgTypeGIF),
+				DestImgExt: "gif",
+				SkipErr:    false,
+				KeepSrcImg: false,
+				Dec:        PNGDecoder{},
+				Enc:        GIFEncoder{},
 			},
-			expectDeletedImgs: paths{
+			args: args{
+				srcImgType: "png",
+				dirPath:    rootForTestDir,
+			},
+			expectImgType: "gif",
+			wantDeletedImgs: paths{
 				// converted image
 				rootForTestDir + "/validPNG.png",
 				subDir + "/validPNG.png",
 			},
-			expectConvertedImgs: paths{
+			wantConvertedImgs: paths{
 				// converted image
 				rootForTestDir + "/validPNG.gif",
 				subDir + "/validPNG.gif",
@@ -211,48 +176,69 @@ func Test_converter_convert(t *testing.T) {
 		{
 			name: "png to jpg",
 			fields: fields{
-				dirPath:     rootForTestDir,
-				srcImgType:  ImgTypePNG,
-				destImgType: ImgTypeJPEG,
-				destImgExt:  "jpg",
-				skipErr:     false,
-				decoder:     GetDecoder(ImgTypePNG),
-				encoder:     GetEncoder(ImgTypeJPEG),
+				DestImgExt: "jpg",
+				SkipErr:    false,
+				KeepSrcImg: false,
+				Dec:        PNGDecoder{},
+				Enc:        JPEGEncoder{},
 			},
-			expectDeletedImgs: paths{
+			args: args{
+				srcImgType: "png",
+				dirPath:    rootForTestDir,
+			},
+			expectImgType: "jpeg",
+			wantDeletedImgs: paths{
 				// converted image
 				rootForTestDir + "/validPNG.gif",
 				subDir + "/validPNG.gif",
 			},
-			expectConvertedImgs: paths{
+			wantConvertedImgs: paths{
 				// converted image
 				rootForTestDir + "/validPNG.jpg",
 				subDir + "/validPNG.jpg",
 			},
 			wantErr: false,
 		},
-
+		// convert without error, keep org img
+		{
+			name: "png to jpg",
+			fields: fields{
+				DestImgExt: "jpg",
+				SkipErr:    false,
+				KeepSrcImg: true,
+				Dec:        PNGDecoder{},
+				Enc:        JPEGEncoder{},
+			},
+			args: args{
+				srcImgType: "png",
+				dirPath:    rootForTestDir,
+			},
+			expectImgType: "jpeg",
+			// no img deleted after converted
+			wantDeletedImgs: paths{},
+			wantConvertedImgs: paths{
+				// converted image
+				rootForTestDir + "/validPNG.jpg",
+				subDir + "/validPNG.jpg",
+			},
+			wantErr: false,
+		},
 		// convert with error
 		{
 			name: "wrong decoder",
 			fields: fields{
-				dirPath:     rootForTestDir,
-				srcImgType:  ImgTypePNG,
-				destImgType: ImgTypeJPEG,
-				skipErr:     false,
-				decoder:     GetDecoder(ImgTypeGIF), // wrong decoder
-				encoder:     GetEncoder(ImgTypeJPEG),
+				SkipErr: false,
+				Dec:     GIFDecoder{}, // wrong decoder
+				Enc:     JPEGEncoder{},
 			},
 			// no new files were added
-			expectDeletedImgs: paths{},
+			wantDeletedImgs: paths{},
 			// no new imgs were converted
-			expectConvertedImgs: paths{},
-			wantErr:             true,
+			wantConvertedImgs: paths{},
+			wantErr:           true,
 		},
 		// in case of wrong encoder,
-		// the image still be converted successfully,
-		// so we need to ensure no wrong encoder is taken
-		// by test cases of getEncoder method
+		// the image still be converted successfully.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -268,20 +254,18 @@ func Test_converter_convert(t *testing.T) {
 				}
 			}()
 
-			conv := converter{
-				dirPath:     tt.fields.dirPath,
-				srcImgType:  tt.fields.srcImgType,
-				destImgType: tt.fields.destImgType,
-				destImgExt:  tt.fields.destImgExt,
-				skipErr:     tt.fields.skipErr,
-				encoder:     tt.fields.encoder,
-				decoder:     tt.fields.decoder,
+			conv := Converter{
+				DestImgExt: tt.fields.DestImgExt,
+				SkipErr:    tt.fields.SkipErr,
+				KeepSrcImg: tt.fields.KeepSrcImg,
+				Enc:        tt.fields.Enc,
+				Dec:        tt.fields.Dec,
 			}
-			conv.errOnConvImg = errBuilder(conv.skipErr)
+			conv.errOnConvImg = errBuilder(conv.SkipErr)
 
 			// ensure about error
-			if err := conv.convert(); (err != nil) != tt.wantErr {
-				t.Errorf("converter.convert() error = %v, wantErr %v", err, tt.wantErr)
+			if err := conv.ConvertDir(tt.args.dirPath, tt.args.srcImgType); (err != nil) != tt.wantErr {
+				t.Errorf("Converter.convertDir() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
 			// ensure about files not be converted are unaffected
@@ -290,201 +274,266 @@ func Test_converter_convert(t *testing.T) {
 			}
 
 			// ensure about files were deleted after converted
-			if err := verifyFiles(tt.expectDeletedImgs, false); err != nil {
+			if err := verifyFiles(tt.wantDeletedImgs, false); err != nil {
 				t.Errorf("file not deleted after test: %+v", err)
 			}
 
 			// ensure new images were added after converted
-			if err := verifyImgs(tt.expectConvertedImgs, tt.fields.destImgType); err != nil {
+			if err := verifyImgs(tt.wantConvertedImgs, tt.expectImgType); err != nil {
 				t.Errorf("img not correct after test, err: %+v", err)
 			}
 		})
 	}
 }
 
-func Test_isImgWithType(t *testing.T) {
-	pngFile := rootForTestDir + "/validPNG.png"
-	txtFile := rootForTestDir + "/textFile.txt"
-	txtFileRenamedToPNGFile := rootForTestDir + "/textFileRenameToPNG.png"
-
+func TestConverter_ConvertImg(t *testing.T) {
+	type fields struct {
+		DestImgExt ImgExt
+		Dec        Decoder
+		Enc        Encoder
+		Picker     ImgPicker
+		SkipErr    bool
+		KeepSrcImg bool
+	}
 	type args struct {
-		path    string
-		imgType ImgType
+		imgPath string
 	}
 	tests := []struct {
-		name    string
-		args    args
-		want    bool
-		wantErr bool
+		name              string
+		fields            fields
+		args              args
+		wantConvertedImgs paths
+		wantDeletedImgs   paths
+		expectImgType     ImgType
+		wantErr           bool
 	}{
 		{
-			"correct img and type",
-			args{pngFile, ImgTypePNG},
-			true,
-			false,
+			name: "convert ok, without keep org file",
+			fields: fields{
+				DestImgExt: "jpg",
+				Dec:        PNGDecoder{},
+				Enc:        JPEGEncoder{},
+				Picker:     DefaultImgPicker{},
+				SkipErr:    false,
+				KeepSrcImg: false,
+			},
+			args: args{imgPath: rootForTestDir + "/validPNG.png"},
+			wantConvertedImgs: paths{
+				rootForTestDir + "/validPNG.jpg",
+			},
+			wantDeletedImgs: paths{
+				rootForTestDir + "/validPNG.png",
+			},
+			expectImgType: "jpeg",
+			wantErr:       false,
 		},
 		{
-			"correct img and wrong type",
-			args{pngFile, ImgTypeJPEG},
-			false,
-			false,
+			name: "convert ok, with keep org file",
+			fields: fields{
+				DestImgExt: "png",
+				Dec:        GIFDecoder{},
+				Enc:        PNGEncoder{},
+				Picker:     DefaultImgPicker{},
+				SkipErr:    false,
+				KeepSrcImg: true,
+			},
+			args: args{imgPath: rootForTestDir + "/validGIF.gif"},
+			wantConvertedImgs: paths{
+				rootForTestDir + "/validGIF.png",
+			},
+			wantDeletedImgs: paths{},
+			expectImgType:   "png",
+			wantErr:         false,
 		},
 		{
-			"wrong img",
-			args{txtFileRenamedToPNGFile, ImgTypeJPEG},
-			false,
-			false,
+			name: "convert error, no skip error",
+			fields: fields{
+				DestImgExt: "png",
+				Dec:        GIFDecoder{},
+				Enc:        PNGEncoder{},
+				Picker:     DefaultImgPicker{},
+				SkipErr:    false,
+				KeepSrcImg: false,
+			},
+			args:              args{imgPath: rootForTestDir + "/noExistingImg.gif"},
+			wantConvertedImgs: paths{},
+			wantDeletedImgs:   paths{},
+			expectImgType:     "png",
+			wantErr:           true,
 		},
 		{
-			"wrong file",
-			args{txtFile, ImgTypeJPEG},
-			false,
-			false,
+			name: "convert error on verify file, skip error",
+			fields: fields{
+				DestImgExt: "png",
+				Dec:        GIFDecoder{},
+				Enc:        PNGEncoder{},
+				Picker:     DefaultImgPicker{},
+				SkipErr:    true,
+				KeepSrcImg: false,
+			},
+			args:              args{imgPath: "/no/existing/img.gif"},
+			wantConvertedImgs: paths{},
+			wantDeletedImgs:   paths{},
+			expectImgType:     "png",
+			wantErr:           true,
 		},
 		{
-			"img not exist",
-			args{"not_exit_img.jpg", ImgTypeJPEG},
-			false,
-			true,
+			name: "convert error on decoding file, skip error",
+			fields: fields{
+				DestImgExt: "png",
+				Dec:        errDecoder{},
+				Enc:        PNGEncoder{},
+				Picker:     DefaultImgPicker{},
+				SkipErr:    true,
+				KeepSrcImg: false,
+			},
+			args:              args{imgPath: rootForTestDir + "/validPNG.png"},
+			wantConvertedImgs: paths{},
+			wantDeletedImgs:   paths{},
+			expectImgType:     "png",
+			wantErr:           false,
 		},
 	}
+
+	testDirs := paths{rootForTestDir}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := copyTestFilesToDir(orgFiles, paths{rootForTestDir}); err != nil {
-				t.Errorf("error on copy test files to test root dirs: %+v", err)
+			if err := copyTestFilesToDir(orgFiles, testDirs); err != nil {
+				t.Errorf("error on copy test files to: %v, err: %+v", testDirs, err)
 				return
 			}
 
 			defer func() {
 				// clean all files in test dirs after each test
-				if err := deleteAllFiles(paths{rootForTestDir}); err != nil {
-					t.Errorf("error on cleaning files in test root dir: %+v", err)
+				if err := deleteAllFiles(testDirs); err != nil {
+					t.Errorf("error on cleaning files in: %v, err: %+v", testDirs, err)
 				}
 			}()
 
-			got, err := isImgWithType(tt.args.path, tt.args.imgType)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("isImgWithType() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			conv := &Converter{
+				DestImgExt: tt.fields.DestImgExt,
+				Dec:        tt.fields.Dec,
+				Enc:        tt.fields.Enc,
+				Picker:     tt.fields.Picker,
+				SkipErr:    tt.fields.SkipErr,
+				KeepSrcImg: tt.fields.KeepSrcImg,
 			}
-			if got != tt.want {
-				t.Errorf("isImgWithType() = %v, want %v", got, tt.want)
+			conv.errOnConvImg = errBuilder(conv.SkipErr)
+
+			if err := conv.ConvertImg(tt.args.imgPath); (err != nil) != tt.wantErr {
+				t.Errorf("Converter.ConvertImg() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			// ensure about files were deleted after converted
+			if err := verifyFiles(tt.wantDeletedImgs, false); err != nil {
+				t.Errorf("file not deleted after test: %+v", err)
+			}
+			// ensure new images were added after converted
+			if err := verifyImgs(tt.wantConvertedImgs, tt.expectImgType); err != nil {
+				t.Errorf("img not correct after test, err: %+v", err)
 			}
 		})
 	}
 }
 
-func Test_converter_convertImg(t *testing.T) {
+func TestConverter_validate(t *testing.T) {
+	type fields struct {
+		DestImgExt   ImgExt
+		Dec          Decoder
+		Enc          Encoder
+		Picker       ImgPicker
+		SkipErr      bool
+		KeepSrcImg   bool
+		errOnConvImg func(err error) error
+		path         string
+		srcImgType   ImgType
+	}
+	type args struct {
+		isConvertDir bool
+	}
 	tests := []struct {
 		name    string
-		skipErr bool
-		img     image
-		wantErr bool
+		fields  fields
+		args    args
+		wantErr error
 	}{
 		{
-			"skip error is true",
-			true,
-			image{"/no/exist/file.png"},
-			false,
+			name:    "using ConvertDir for file",
+			fields:  fields{path: rootForTestDir},
+			args:    args{false},
+			wantErr: fmt.Errorf("%s is dir, use ConvertDir method instead", rootForTestDir),
 		},
 		{
-			"skip error is false",
-			false,
-			image{"/no/exist/file.png"},
-			true,
+			name:    "using ConvertImg for dir",
+			fields:  fields{path: orgFilesDir + "/validPNG.png"},
+			args:    args{true},
+			wantErr: fmt.Errorf("%s is file, use ConvertImg method instead", orgFilesDir+"/validPNG.png"),
+		},
+		{
+			name:    "decoder is not set",
+			fields:  fields{path: orgFilesDir + "/validPNG.png"},
+			args:    args{false},
+			wantErr: fmt.Errorf("decoder is not set"),
+		},
+		{
+			name: "encoder is not set",
+			fields: fields{
+				Dec:  PNGDecoder{},
+				path: orgFilesDir + "/validPNG.png",
+			},
+			args:    args{false},
+			wantErr: fmt.Errorf("encoder is not set"),
+		},
+		{
+			name: "picker is not set",
+			fields: fields{
+				Dec:  PNGDecoder{},
+				Enc:  JPEGEncoder{},
+				path: orgFilesDir + "/validPNG.png",
+			},
+			args:    args{false},
+			wantErr: fmt.Errorf("image file picker is not set"),
+		},
+		{
+			name: "DestImgExt is not set",
+			fields: fields{
+				Dec:    PNGDecoder{},
+				Enc:    JPEGEncoder{},
+				Picker: DefaultImgPicker{},
+				path:   orgFilesDir + "/validPNG.png",
+			},
+			args:    args{false},
+			wantErr: fmt.Errorf("destination extension is not set"),
+		},
+		{
+			name: "valid converter",
+			fields: fields{
+				Dec:        PNGDecoder{},
+				Enc:        JPEGEncoder{},
+				Picker:     DefaultImgPicker{},
+				DestImgExt: "jpg",
+				path:       orgFilesDir + "/validPNG.png",
+			},
+			args:    args{false},
+			wantErr: nil,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			conv := converter{skipErr: tt.skipErr}
-			conv.errOnConvImg = errBuilder(conv.skipErr)
-			errReturn := conv.errOnConvImg(conv.convertImg(tt.img))
-
-			if (errReturn != nil) != tt.wantErr {
-				t.Errorf("converter.convertImg() error = %v, wantErr %v", errReturn, tt.wantErr)
+			conv := &Converter{
+				DestImgExt:   tt.fields.DestImgExt,
+				Dec:          tt.fields.Dec,
+				Enc:          tt.fields.Enc,
+				Picker:       tt.fields.Picker,
+				SkipErr:      tt.fields.SkipErr,
+				KeepSrcImg:   tt.fields.KeepSrcImg,
+				errOnConvImg: tt.fields.errOnConvImg,
+				path:         tt.fields.path,
+				srcImgType:   tt.fields.srcImgType,
+			}
+			if err := conv.validate(tt.args.isConvertDir); !reflect.DeepEqual(err, tt.wantErr) {
+				t.Errorf("Converter.validate() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
-}
-
-type paths []string
-
-// verifyImgs verifies that images are existing or not,
-// and corresponding to it type
-func verifyImgs(imgs paths, imgType ImgType) error {
-	for _, img := range imgs {
-		ok, err := isImgWithType(img, imgType)
-		if err != nil {
-			return err
-		}
-		if !ok {
-			return fmt.Errorf("converted image type is wrong, img: %s, expect type: %s", img, imgType)
-		}
-	}
-
-	return nil
-}
-
-// verifyFiles verifies files are existing or not
-func verifyFiles(files paths, checkExisting bool) error {
-	for _, f := range files {
-		file, err := os.Open(f)
-		defer file.Close()
-		switch checkExisting {
-		case true:
-			if err == nil {
-				continue
-			}
-			return fmt.Errorf("need file %v existing, got err: %+v", f, err)
-		case false:
-			if os.IsNotExist(err) {
-				continue
-			}
-			return fmt.Errorf("need file %v removed, got err: %v", f, err)
-		}
-	}
-
-	return nil
-}
-
-func copyTestFilesToDir(files paths, dirs paths) error {
-	for _, dir := range dirs {
-		for _, f := range files {
-			srcFile, err := ioutil.ReadFile(f)
-			if err != nil {
-				return err
-			}
-
-			fileNameIdx := strings.LastIndex(f, "/")
-			destPath := dir + string(f[fileNameIdx:])
-			err = ioutil.WriteFile(destPath, srcFile, 0644)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-func deleteAllFiles(dirs paths) error {
-	for _, dir := range dirs {
-		outerErr := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-
-			if !info.IsDir() { // file
-				return os.Remove(path)
-			}
-
-			return nil
-		})
-
-		if outerErr != nil {
-			return outerErr
-		}
-	}
-
-	return nil
 }
