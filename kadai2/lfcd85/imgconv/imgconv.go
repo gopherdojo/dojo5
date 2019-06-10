@@ -3,11 +3,11 @@ package imgconv
 
 import (
 	"errors"
-	"fmt"
 	"image"
 	"image/gif"
 	"image/jpeg"
 	"image/png"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -69,17 +69,12 @@ func convSingleFile(path string, info os.FileInfo) error {
 	}
 	defer f.Close()
 
-	img, fmtStr, err := image.Decode(f)
+	img, err := decodeImg(f)
 	if err != nil {
-		fmt.Printf("%q is skipped (%v)\n", path, err)
-		return nil
-	}
-	if ImgFmt(fmtStr) != fmtFrom {
 		return nil
 	}
 
-	err = writeOutputFile(img, path)
-	return err
+	return writeOutputFile(img, path)
 }
 
 func writeOutputFile(img image.Image, path string) error {
@@ -89,17 +84,30 @@ func writeOutputFile(img image.Image, path string) error {
 	}
 	defer f.Close()
 
+	err = encodeImg(f, img)
+	return err
+}
+
+func decodeImg(r io.Reader) (image.Image, error) {
+	img, fmtStr, err := image.Decode(r)
+	if ImgFmt(fmtStr) != fmtFrom {
+		err = errors.New("image format does not match")
+	}
+	return img, err
+}
+
+func encodeImg(w io.Writer, img image.Image) error {
 	switch fmtTo {
 	case "jpeg":
-		if err := jpeg.Encode(f, img, nil); err != nil {
+		if err := jpeg.Encode(w, img, nil); err != nil {
 			return err
 		}
 	case "png":
-		if err := png.Encode(f, img); err != nil {
+		if err := png.Encode(w, img); err != nil {
 			return err
 		}
 	case "gif":
-		if err := gif.Encode(f, img, nil); err != nil {
+		if err := gif.Encode(w, img, nil); err != nil {
 			return err
 		}
 	}
