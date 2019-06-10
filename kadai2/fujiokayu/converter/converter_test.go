@@ -5,27 +5,42 @@ import (
 	"testing"
 )
 
-const decodeFile string = "../testdata/cat.jpg"
-const encodeFile string = "../testdata/cat.png"
-
 func Test_Convert(t *testing.T) {
-	err := Convert(decodeFile, "jpg", "png")
-	if err != nil {
-		t.Fatal("failed test: Convert error")
+	cases := []struct {
+		testCase   string
+		decodeFile string
+		encodeFile string
+		decodeType string
+		encodeType string
+	}{
+		{testCase: "J2P", decodeFile: "../testdata/cat.jpg", encodeFile: "../testdata/cat.png", decodeType: "jpg", encodeType: "png"},
+		{testCase: "J2G", decodeFile: "../testdata/cat.jpg", encodeFile: "../testdata/cat.gif", decodeType: "jpg", encodeType: "gif"},
+		{testCase: "P2J", decodeFile: "../testdata/cat.png", encodeFile: "../testdata/cat.jpg", decodeType: "png", encodeType: "jpg"},
+		{testCase: "P2G", decodeFile: "../testdata/cat.png", encodeFile: "../testdata/cat.gif", decodeType: "png", encodeType: "gif"},
+		{testCase: "G2J", decodeFile: "../testdata/cat.gif", encodeFile: "../testdata/cat.jpg", decodeType: "gif", encodeType: "jpg"},
+		{testCase: "G2P", decodeFile: "../testdata/cat.gif", encodeFile: "../testdata/cat.png", decodeType: "gif", encodeType: "png"},
 	}
 
-	// 変換後のファイルが存在するかチェック
-	info, err := os.Stat(encodeFile)
-	if err != nil {
-		t.Fatal("failed test: File not generated")
-	}
-	//　変換後のファイルサイズが0バイトではないかチェック
-	if info.Size() <= 0 {
-		t.Fatal("failed test: Encoded file is invalid")
-	}
-	// テストで生成したファイルを削除する。
-	err = os.Remove(encodeFile)
-	if err != nil {
-		t.Fatal("failed to remove the file")
+	for _, c := range cases {
+		c := c
+		t.Run(c.testCase, func(t *testing.T) {
+			err := Convert(c.decodeFile, c.decodeType, c.encodeType)
+			if err != nil {
+				t.Errorf(
+					"Case (%s) Failed test: Convert error.",
+					c.testCase)
+			}
+			// 変換後のファイルが存在するかチェック
+			info, err := os.Stat(c.encodeFile)
+			if err != nil {
+				t.Errorf("Case (%s) Failed test: File not generated",
+					c.testCase)
+			}
+			//　変換後のファイルサイズが0バイトではないかチェック
+			if info.Size() <= 0 {
+				t.Errorf("Case (%s) Failed test: Encoded file is invalid",
+					c.testCase)
+			}
+		})
 	}
 }
