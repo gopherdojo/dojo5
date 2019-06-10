@@ -88,7 +88,7 @@ func TestConvert(t *testing.T) {
 	}
 }
 
-func TestGenerateOutputPath(t *testing.T) {
+func TestConverter_GenerateOutputPath(t *testing.T) {
 	cases := []struct {
 		path     string
 		fmtTo    ImgFmt
@@ -111,10 +111,11 @@ func TestGenerateOutputPath(t *testing.T) {
 		},
 	}
 
-	imgFmtExts.Init()
+	cv := &Converter{}
+	cv.imgFmtExts.Init()
 	for _, c := range cases {
-		fmtTo = c.fmtTo
-		assertEq(t, generateOutputPath(c.path), c.expected)
+		cv.fmtTo = c.fmtTo
+		assertEq(t, cv.generateOutputPath(c.path), c.expected)
 	}
 }
 
@@ -129,10 +130,11 @@ func TestImgFmt_Detect(t *testing.T) {
 		{"GIF", ImgFmt("gif")},
 	}
 
-	imgFmtExts.Init()
+	cv := &Converter{}
+	cv.imgFmtExts.Init()
 	var imgFmt ImgFmt
 	for _, c := range cases {
-		imgFmt.Detect(c.extStr)
+		imgFmt.Detect(cv, c.extStr)
 		assertEq(t, imgFmt, c.expected)
 	}
 }
@@ -152,8 +154,9 @@ func TestImgFmt_Match(t *testing.T) {
 		{"foopng", ImgFmt("png"), false},
 	}
 
-	imgFmtExts.Init()
+	cv := &Converter{}
+	cv.imgFmtExts.Init()
 	for _, c := range cases {
-		assertEq(t, c.imgFmt.Match(c.fileName), c.expected)
+		assertEq(t, c.imgFmt.Match(cv, c.fileName), c.expected)
 	}
 }
