@@ -7,26 +7,32 @@ import (
 )
 
 func assertEq(t *testing.T, actual interface{}, expected interface{}) {
+	t.Helper()
 	if actual != expected {
 		t.Errorf("actual: %v, expected: %v", actual, expected)
 	}
 }
 
 func assertNil(t *testing.T, obj interface{}) {
+	t.Helper()
 	if obj != nil {
 		t.Errorf("actual: not nil, expected: nil")
 	}
 }
 
 func assertNotNil(t *testing.T, obj interface{}) {
+	t.Helper()
 	if obj == nil {
 		t.Errorf("actual: nil, expected: not nil")
 	}
 }
 
 func assertFileExists(t *testing.T, filePath string, expected bool) {
+	t.Helper()
+
 	_, err := os.Stat(filePath)
 	actual := err == nil
+
 	if actual != expected {
 		switch expected {
 		case true:
