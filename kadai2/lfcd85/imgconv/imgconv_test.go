@@ -13,20 +13,6 @@ func assertEq(t *testing.T, actual interface{}, expected interface{}) {
 	}
 }
 
-func assertNil(t *testing.T, obj interface{}) {
-	t.Helper()
-	if obj != nil {
-		t.Errorf("actual: not nil, expected: nil")
-	}
-}
-
-func assertNotNil(t *testing.T, obj interface{}) {
-	t.Helper()
-	if obj == nil {
-		t.Errorf("actual: nil, expected: not nil")
-	}
-}
-
 func assertFileExists(t *testing.T, filePath string, expected bool) {
 	t.Helper()
 
@@ -89,10 +75,11 @@ func TestConvert(t *testing.T) {
 		defer os.RemoveAll("./output")
 
 		err := Convert("../testdata", c.from, c.to)
-		if c.expectedSuccess == true {
-			assertNil(t, err)
-		} else {
-			assertNotNil(t, err)
+		if err != nil && c.expectedSuccess == true {
+			t.Errorf("function Convert is expected to succeed, but actually failed")
+		}
+		if err == nil && c.expectedSuccess == false {
+			t.Errorf("function Convert is expected to fail, but actually succeeded")
 		}
 		for f, b := range c.expectedFileNames {
 			filePath := strings.Join([]string{outputDir, f}, "/")
