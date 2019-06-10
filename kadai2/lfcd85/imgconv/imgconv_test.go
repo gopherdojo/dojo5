@@ -10,8 +10,6 @@ func assertEq(t *testing.T, actual interface{}, expected interface{}) {
 	}
 }
 
-/* NOTE: This testing can work, but should be run in a sandbox.
-
 func assertNil(t *testing.T, obj interface{}) {
 	if obj != nil {
 		t.Errorf("actual: not nil, expected: nil")
@@ -38,7 +36,7 @@ func TestConvert(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		err := Convert("../test", c.from, c.to)
+		err := Convert("../testdata", c.from, c.to)
 		if c.expected == true {
 			assertNil(t, err)
 		} else {
@@ -46,8 +44,6 @@ func TestConvert(t *testing.T) {
 		}
 	}
 }
-
-*/
 
 func TestGenerateOutputPath(t *testing.T) {
 	cases := []struct {
