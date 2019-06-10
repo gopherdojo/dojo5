@@ -59,7 +59,12 @@ func Convert(dir string, from string, to string) error {
 }
 
 func convSingleFile(path string, info os.FileInfo) error {
-	if info.IsDir() || !fmtFrom.Match(info.Name()) {
+	if info.IsDir() {
+		// FIXME: create output directories
+		outputPath := "./output/" + strings.TrimLeft(path, "./")
+		return os.MkdirAll(outputPath, 0777)
+	}
+	if !fmtFrom.Match(info.Name()) {
 		return nil
 	}
 
@@ -78,7 +83,10 @@ func convSingleFile(path string, info os.FileInfo) error {
 }
 
 func writeOutputFile(img image.Image, path string) error {
-	f, err := os.Create(generateOutputPath(path))
+	// FIXME: temporarily separate input and output directories
+	outputPath := "./output/" + strings.TrimLeft(generateOutputPath(path), "./")
+
+	f, err := os.Create(outputPath)
 	if err != nil {
 		return err
 	}

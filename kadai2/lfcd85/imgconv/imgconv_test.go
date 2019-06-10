@@ -1,6 +1,7 @@
 package imgconv
 
 import (
+	"os"
 	"testing"
 )
 
@@ -36,6 +37,8 @@ func TestConvert(t *testing.T) {
 	}
 
 	for _, c := range cases {
+		defer os.RemoveAll("./output")
+
 		err := Convert("../testdata", c.from, c.to)
 		if c.expected == true {
 			assertNil(t, err)
