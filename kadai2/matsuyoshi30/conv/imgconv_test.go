@@ -38,7 +38,7 @@ func TestImgconv(t *testing.T) {
 func testImgconv_pass(t *testing.T, from, to ImageType, input, output string) {
 	t.Helper()
 	if err := Imgconv(from, to, input); err != nil {
-		t.Fatal("input: %v (%v -> %v): %v", input, from, to, err)
+		t.Fatalf("input: %v (%v -> %v): %v", input, from, to, err)
 	}
 
 	clean(output)

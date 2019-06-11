@@ -25,7 +25,7 @@ func Imgconv(fromtype, totype ImageType, dirpath string) error {
 	filelist := make([]string, 0)
 	err := filepath.Walk(dirpath, func(fp string, info os.FileInfo, err error) error {
 		if info.Mode().IsRegular() {
-			ext := ImageType(filepath.Ext(fp)[1:])
+			ext, err := SelectFormat(filepath.Ext(fp)[1:])
 			if err != nil {
 				return err
 			}
