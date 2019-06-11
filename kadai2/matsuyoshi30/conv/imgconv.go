@@ -77,7 +77,7 @@ func decoder(filename string, fromtype ImageType) (image.Image, error) {
 	img, encode, err := image.Decode(file)
 
 	if ImageType(encode) != fromtype {
-		return nil, errors.New("Does not match file and format")
+		return nil, errors.New("decoder failed: does not match file and format")
 	}
 	if err != nil {
 		return nil, err
@@ -102,7 +102,7 @@ func encoder(img image.Image, filename string, format ImageType) error {
 	case GIF:
 		convertToGif(out, img)
 	default:
-		fmt.Println("Unknown format")
+		return errors.New("encoder failed: unknown format")
 	}
 
 	return nil
@@ -132,7 +132,7 @@ func SelectFormat(f string) (ImageType, error) {
 	case "gif":
 		return GIF, nil
 	default:
-		return "", errors.New("Unsupport format")
+		return "", errors.New("SelectFormat error: Unsupport format")
 	}
-	return "", errors.New("Unknown format")
+	return "", errors.New("SelectFormat error: Unknown format")
 }
