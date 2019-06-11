@@ -34,9 +34,23 @@ func NewImageData(path string) (*ImageData, error) {
 	}, nil
 }
 
-// Save save ImageData for input format if format satisfies ".jpeg", ".jpg", ".gif", ".png"
-func (i *ImageData) Save(path string) error {
-	ext := filepath.Ext(path)
+// Convert convert image
+func (i *ImageData) Convert(ext string) error {
+
+	// check path
+	if filepath.Ext(i.Path) == ext {
+		return nil
+	}
+
+	// save file
+	newPath := i.Path[:len(i.Path)-len(filepath.Ext(i.Path))] + ext
+
+	// if file exist, do nothing
+	if _, err := os.Stat(newPath); !os.IsNotExist(err) {
+		return nil
+	}
+
+	i.Path = newPath
 	if err := func(ext string) error {
 		for _, suffix := range []string{".jpeg", ".jpg", ".gif", ".png"} {
 			if ext == suffix {
@@ -49,11 +63,11 @@ func (i *ImageData) Save(path string) error {
 	}
 
 	// if file exist, do nothing
-	if _, err := os.Stat(path); !os.IsNotExist(err) {
+	if _, err := os.Stat(i.Path); !os.IsNotExist(err) {
 		return nil
 	}
 
-	dst, err := os.Create(path)
+	dst, err := os.Create(i.Path)
 	if err != nil {
 		return err
 	}
@@ -73,37 +87,11 @@ func (i *ImageData) Save(path string) error {
 		return err
 	}
 	return nil
-}
 
-// WithExt add extension
-func (i *ImageData) WithExt(ext string) string {
-	return i.Path + ext
-}
+	//// remove old file -> helper
+	// if err := os.Remove(i.Path); err != nil {
+	// 	return err
+	// }
 
-// Convert convert image
-func (i *ImageData) Convert(ext string) error {
-
-	// check path
-	if filepath.Ext(i.Path) == ext {
-		return nil
-	}
-
-	// save file
-	newPath := i.Path[:len(i.Path)-len(filepath.Ext(i.Path))] + ext
-
-	// if file exist, do nothing
-	if _, err := os.Stat(newPath); !os.IsNotExist(err) {
-		return nil
-	}
-
-	if err := i.Save(newPath); err != nil {
-		return err
-	}
-
-	// remove old file
-	if err := os.Remove(i.Path); err != nil {
-		return err
-	}
-	i.Path = newPath
 	return nil
 }
