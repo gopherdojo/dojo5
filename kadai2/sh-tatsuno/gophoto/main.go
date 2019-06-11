@@ -6,16 +6,16 @@ import (
 	"io"
 	"os"
 
-	"github.com/gopherdojo/dojo5/kadai1/sh-tatsuno/gophoto/conv"
-	"github.com/gopherdojo/dojo5/kadai1/sh-tatsuno/gophoto/dir"
+	"github.com/gopherdojo/dojo5/kadai2/sh-tatsuno/gophoto/conv"
+	"github.com/gopherdojo/dojo5/kadai2/sh-tatsuno/gophoto/dir"
 )
 
 const (
 	// ExitCodeOK : exit code
-	ExitCodeOK = iota
+	ExitCodeOK = 0
 
 	// ExitCodeError : error code
-	ExitCodeError
+	ExitCodeError = 1
 )
 
 var (
@@ -59,7 +59,7 @@ func run(args []string) int {
 
 	if dirName == "" {
 		usage()
-		fmt.Printf("Expected dir path\n")
+		fmt.Fprintf(os.Stderr, "Expected dir path\n")
 		return ExitCodeError
 	}
 
@@ -67,7 +67,7 @@ func run(args []string) int {
 	var pathList []string
 	pathList, err := dir.Lookup(dirName, input, pathList)
 	if err != nil {
-		fmt.Printf("can not open file, %v\n", err)
+		fmt.Fprintf(os.Stderr, "can not open file, %v\n", err)
 		return ExitCodeError
 	}
 
@@ -80,12 +80,12 @@ func run(args []string) int {
 		// convert in each file
 		img, err := conv.NewImg(path)
 		if err != nil {
-			fmt.Printf("can not generate img instance, %v\n", err)
+			fmt.Fprintf(os.Stderr, "can not generate img instance, %v\n", err)
 			return ExitCodeError
 		}
 
 		if err := img.Convert(output); err != nil {
-			fmt.Printf("can not convert file, %v\n", err)
+			fmt.Fprintf(os.Stderr, "can not convert file, %v\n", err)
 			return ExitCodeError
 		}
 

@@ -10,12 +10,12 @@ func Test_Lookup(t *testing.T) {
 	t.Run("OK: .jpg", func(t *testing.T) {
 		var actual []string
 		// ### Given ###
-		actual, err := Lookup("./test", ".jpg", actual)
+		actual, err := Lookup("./testdata", ".jpg", actual)
 		if err != nil {
 			t.Fatalf("Failed test. err: %v", err)
 		}
 
-		expected := []string{"test/test1.jpg", "test/test3/test4.jpg", "test/test3/test5.jpg"}
+		expected := []string{"testdata/test1.jpg", "testdata/test3/test4.jpg", "testdata/test3/test5.jpg"}
 
 		// ### Then ###
 		if !reflect.DeepEqual(actual, expected) {
@@ -26,12 +26,12 @@ func Test_Lookup(t *testing.T) {
 	t.Run("OK: .png", func(t *testing.T) {
 		var actual []string
 		// ### Given ###
-		actual, err := Lookup("./test", ".png", actual)
+		actual, err := Lookup("./testdata", ".png", actual)
 		if err != nil {
 			t.Fatalf("Failed test. err: %v", err)
 		}
 
-		expected := []string{"test/test2.png", "test/test3/test6.png"}
+		expected := []string{"testdata/test2.png", "testdata/test3/test6.png"}
 
 		// ### Then ###
 		if !reflect.DeepEqual(actual, expected) {
@@ -42,7 +42,7 @@ func Test_Lookup(t *testing.T) {
 	t.Run("OK: .gif(empty)", func(t *testing.T) {
 		var actual []string
 		// ### Given ###
-		actual, err := Lookup("./test", ".gif", actual)
+		actual, err := Lookup("./testdata", ".gif", actual)
 		if err != nil {
 			t.Fatalf("Failed test. err: %v", err)
 		}
@@ -58,12 +58,12 @@ func Test_Lookup(t *testing.T) {
 	t.Run("NG: not found directory", func(t *testing.T) {
 		var actual []string
 		// ### Given ###
-		_, err := Lookup("./test2", ".jpg", actual)
+		_, err := Lookup("./testdata2", ".jpg", actual)
 		if err == nil {
 			t.Fatalf("should be error.")
 		}
 
-		expected := "open ./test2: no such file or directory"
+		expected := "open ./testdata2: no such file or directory"
 
 		// ### Then ###
 		if err.Error() != expected {
