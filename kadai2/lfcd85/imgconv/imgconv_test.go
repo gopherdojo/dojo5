@@ -72,19 +72,22 @@ func TestConvert(t *testing.T) {
 
 	outputDir := "./output/testdata"
 	for _, c := range cases {
-		defer os.RemoveAll("./output")
+		c := c
+		t.Run(strings.Join([]string{c.from, c.to}, "->"), func(t *testing.T) {
+			defer os.RemoveAll("./output")
 
-		err := Convert("../testdata", c.from, c.to)
-		if err != nil && c.expectedSuccess == true {
-			t.Errorf("function Convert is expected to succeed, but actually failed")
-		}
-		if err == nil && c.expectedSuccess == false {
-			t.Errorf("function Convert is expected to fail, but actually succeeded")
-		}
-		for f, b := range c.expectedFileNames {
-			filePath := strings.Join([]string{outputDir, f}, "/")
-			assertFileExists(t, filePath, b)
-		}
+			err := Convert("../testdata", c.from, c.to)
+			if err != nil && c.expectedSuccess == true {
+				t.Errorf("function Convert is expected to succeed, but actually failed")
+			}
+			if err == nil && c.expectedSuccess == false {
+				t.Errorf("function Convert is expected to fail, but actually succeeded")
+			}
+			for f, b := range c.expectedFileNames {
+				filePath := strings.Join([]string{outputDir, f}, "/")
+				assertFileExists(t, filePath, b)
+			}
+		})
 	}
 }
 
@@ -119,8 +122,11 @@ func TestConverter_GenerateOutputPath(t *testing.T) {
 	cv := &Converter{}
 	cv.imgFmtExts.Init()
 	for _, c := range cases {
-		cv.fmtTo = c.fmtTo
-		assertEq(t, cv.generateOutputPath(c.path), c.expected)
+		c := c
+		t.Run(c.path, func(t *testing.T) {
+			cv.fmtTo = c.fmtTo
+			assertEq(t, cv.generateOutputPath(c.path), c.expected)
+		})
 	}
 }
 
@@ -137,10 +143,13 @@ func TestImgFmt_Detect(t *testing.T) {
 
 	cv := &Converter{}
 	cv.imgFmtExts.Init()
-	var imgFmt ImgFmt
 	for _, c := range cases {
-		imgFmt.Detect(cv, c.extStr)
-		assertEq(t, imgFmt, c.expected)
+		c := c
+		t.Run(c.extStr, func(t *testing.T) {
+			var imgFmt ImgFmt
+			imgFmt.Detect(cv, c.extStr)
+			assertEq(t, imgFmt, c.expected)
+		})
 	}
 }
 
@@ -162,6 +171,9 @@ func TestImgFmt_Match(t *testing.T) {
 	cv := &Converter{}
 	cv.imgFmtExts.Init()
 	for _, c := range cases {
-		assertEq(t, c.imgFmt.Match(cv, c.fileName), c.expected)
+		c := c
+		t.Run(c.fileName, func(t *testing.T) {
+			assertEq(t, c.imgFmt.Match(cv, c.fileName), c.expected)
+		})
 	}
 }
