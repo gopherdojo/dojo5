@@ -7,3 +7,6 @@ fmt:
 
 check:
 	GO111MODULE=on go test ./imgconv/... -v
+
+coverage:
+	GO111MODULE=on go test ./imgconv/... -cover
