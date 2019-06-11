@@ -8,7 +8,7 @@ import (
 func Test_Lookup(t *testing.T) {
 
 	t.Run("OK: .jpg", func(t *testing.T) {
-		var actual []string
+		actual := []string{}
 		// ### Given ###
 		actual, err := Lookup("./testdata", ".jpg", actual)
 		if err != nil {
@@ -24,7 +24,7 @@ func Test_Lookup(t *testing.T) {
 	})
 
 	t.Run("OK: .png", func(t *testing.T) {
-		var actual []string
+		actual := []string{}
 		// ### Given ###
 		actual, err := Lookup("./testdata", ".png", actual)
 		if err != nil {
@@ -40,14 +40,14 @@ func Test_Lookup(t *testing.T) {
 	})
 
 	t.Run("OK: .gif(empty)", func(t *testing.T) {
-		var actual []string
+		actual := []string{}
 		// ### Given ###
 		actual, err := Lookup("./testdata", ".gif", actual)
 		if err != nil {
 			t.Fatalf("Failed test. err: %v", err)
 		}
 
-		var expected []string
+		expected := []string{}
 
 		// ### Then ###
 		if !reflect.DeepEqual(actual, expected) {
@@ -56,7 +56,7 @@ func Test_Lookup(t *testing.T) {
 	})
 
 	t.Run("NG: not found directory", func(t *testing.T) {
-		var actual []string
+		actual := []string{}
 		// ### Given ###
 		_, err := Lookup("./testdata2", ".jpg", actual)
 		if err == nil {

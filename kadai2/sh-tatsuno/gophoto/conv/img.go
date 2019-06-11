@@ -2,57 +2,57 @@ package conv
 
 import (
 	"image"
-	"image/gif"  // import gif
-	"image/jpeg" // import jpeg
-	"image/png"  // import png
+	"image/gif"
+	"image/jpeg"
+	"image/png"
 	"os"
 	"path/filepath"
 
 	"golang.org/x/xerrors"
 )
 
-// Img image struct
-type Img struct {
+// ImageData image struct
+type ImageData struct {
 	Path string
 	Data image.Image
 }
 
-// NewImg generate Img struct
-func NewImg(path string) (*Img, error) {
+// NewImageData generate ImageData struct
+func NewImageData(path string) (*ImageData, error) {
 	file, err := os.Open(path)
 	defer file.Close()
 	if err != nil {
 		return nil, err
 	}
-	img, _, err := image.Decode(file)
+	image, _, err := image.Decode(file)
 	if err != nil {
 		return nil, err
 	}
-	return &Img{
+	return &ImageData{
 		Path: path,
-		Data: img,
+		Data: image,
 	}, nil
 }
 
-// Save save img for input format if format satisfies ".jpeg", ".jpg", ".gif", ".png"
-func (i *Img) Save(path string) error {
+// Save save ImageData for input format if format satisfies ".jpeg", ".jpg", ".gif", ".png"
+func (i *ImageData) Save(path string) error {
 	ext := filepath.Ext(path)
-	var err error
-	err = func(ext string) error {
+	if err := func(ext string) error {
 		for _, suffix := range []string{".jpeg", ".jpg", ".gif", ".png"} {
 			if ext == suffix {
 				return nil
 			}
 		}
 		return xerrors.New("invalid extension")
-	}(ext)
-	if err != nil {
+	}(ext); err != nil {
 		return err
 	}
 
 	// if file exist, do nothing
 	if _, err := os.Stat(path); !os.IsNotExist(err) {
 		return nil
+	} else if err != nil {
+		return err
 	}
 
 	dst, err := os.Create(path)
@@ -71,25 +71,27 @@ func (i *Img) Save(path string) error {
 	default:
 		err = xerrors.New("error in main method")
 	}
-	return err
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-// AddExt add extension
-func (i *Img) AddExt(ext string) string {
+// WithExt add extension
+func (i *ImageData) WithExt(ext string) string {
 	return i.Path + ext
 }
 
 // Convert convert image
-func (i *Img) Convert(ext string) error {
+func (i *ImageData) Convert(ext string) error {
 
 	// check path
-	prevPath := i.Path
-	if filepath.Ext(prevPath) == ext {
+	if filepath.Ext(i.Path) == ext {
 		return nil
 	}
 
 	// save file
-	newPath := prevPath[:len(prevPath)-len(filepath.Ext(prevPath))] + ext
+	newPath := i.Path[:len(i.Path)-len(filepath.Ext(i.Path))] + ext
 
 	// if file exist, do nothing
 	if _, err := os.Stat(newPath); !os.IsNotExist(err) {
@@ -101,7 +103,7 @@ func (i *Img) Convert(ext string) error {
 	}
 
 	// remove old file
-	if err := os.Remove(prevPath); err != nil {
+	if err := os.Remove(i.Path); err != nil {
 		return err
 	}
 	i.Path = newPath

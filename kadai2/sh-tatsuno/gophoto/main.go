@@ -18,11 +18,6 @@ const (
 	ExitCodeError = 1
 )
 
-var (
-	// SEP : separator of each line
-	SEP = []byte("\n")
-)
-
 func usage() {
 	io.WriteString(os.Stderr, usageText)
 	flag.PrintDefaults()
@@ -64,7 +59,7 @@ func run(args []string) int {
 	}
 
 	// lookup
-	var pathList []string
+	pathList := []string{}
 	pathList, err := dir.Lookup(dirName, input, pathList)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "can not open file, %v\n", err)
@@ -78,7 +73,7 @@ func run(args []string) int {
 		}
 
 		// convert in each file
-		img, err := conv.NewImg(path)
+		img, err := conv.NewImageData(path)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "can not generate img instance, %v\n", err)
 			return ExitCodeError
