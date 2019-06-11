@@ -16,16 +16,19 @@ func TestImgconv(t *testing.T) {
 	// SUCCESS CASE
 	t.Run("goconv pass", func(t *testing.T) {
 		testcases := []struct {
-			input  string
-			output string
+			inputtype  ImageType
+			outputtype ImageType
+			input      string
+			output     string
 		}{
-			{"appenginegophercolor.jpg", "appenginegophercolor.png"},
-			{"appenginelogo.gif", "appenginelogo.jpeg"},
-			{"bumper.png", "bumper.gif"},
+			{JPEG, PNG, "appenginegophercolor.jpg", "appenginegophercolor.png"},
+			{GIF, JPEG, "appenginelogo.gif", "appenginelogo.jpeg"},
+			{PNG, GIF, "bumper.png", "bumper.gif"},
 		}
 
 		for _, tc := range testcases {
-			testImgconv_pass(t, JPEG, PNG, filepath.Join(TESTDIR, tc.input), filepath.Join(TESTDIR, tc.output))
+			testImgconv_pass(t, tc.inputtype, tc.outputtype,
+				filepath.Join(TESTDIR, tc.input), filepath.Join(TESTDIR, tc.output))
 		}
 	})
 
