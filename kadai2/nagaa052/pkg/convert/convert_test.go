@@ -123,12 +123,20 @@ func TestToPng(t *testing.T) {
 			}
 
 			actual, err := con.ToPng()
-			if c.isError && err == nil {
-				t.Error(err)
-			}
 
-			if actual != c.expected {
-				t.Error(fmt.Sprintf(errMessage, c.expected, actual))
+			if c.isError {
+				if err == nil {
+					t.Errorf("No error occurred. Test : %s", c.name)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("No error occurred. Test : %s", c.name)
+					return
+				}
+
+				if actual != c.expected {
+					t.Error(fmt.Sprintf(errMessage, c.expected, actual))
+				}
 			}
 		})
 	}

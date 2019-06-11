@@ -36,12 +36,6 @@ func TestParseOptions(t *testing.T) {
 		},
 	}
 
-	errMessage := `
-	Expected and actual are different.
-		expected: %v
-		actual: %v
-	`
-
 	for _, c := range cases {
 		c := c
 
@@ -54,13 +48,26 @@ func TestParseOptions(t *testing.T) {
 					t.Errorf("No error occurred. Test : %s", c.name)
 				}
 			} else {
-				if opt.FromFormat != gocon.ImgFormat(c.expectedFrom) {
-					t.Error(fmt.Sprintf(errMessage, gocon.ImgFormat(c.expectedFrom), opt.FromFormat))
+				if err != nil {
+					t.Errorf("No error occurred. Test : %s", c.name)
+					return
 				}
-				if opt.ToFormat != gocon.ImgFormat(c.expectedTo) {
-					t.Error(fmt.Sprintf(errMessage, gocon.ImgFormat(c.expectedTo), opt.ToFormat))
-				}
+
+				testEqFormat(t, opt.FromFormat, gocon.ImgFormat(c.expectedFrom))
+				testEqFormat(t, opt.ToFormat, gocon.ImgFormat(c.expectedTo))
 			}
 		})
+	}
+}
+
+func testEqFormat(t *testing.T, actual, expected gocon.ImgFormat) {
+	t.Helper()
+
+	if actual != expected {
+		t.Fatal(fmt.Sprintf(`
+		Expected and actual are different.
+			expected: %v
+			actual: %v
+		`, expected, actual))
 	}
 }
