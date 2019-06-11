@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gopherdojo/dojo5/kadai1/nagaa052/internal/gocon"
+	"github.com/gopherdojo/dojo5/kadai2/nagaa052/internal/gocon"
 )
 
 var imageFormat string

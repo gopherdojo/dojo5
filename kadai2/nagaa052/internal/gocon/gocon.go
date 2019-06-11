@@ -11,8 +11,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/gopherdojo/dojo5/kadai1/nagaa052/pkg/convert"
-	"github.com/gopherdojo/dojo5/kadai1/nagaa052/pkg/search"
+	"github.com/gopherdojo/dojo5/kadai2/nagaa052/pkg/convert"
+	"github.com/gopherdojo/dojo5/kadai2/nagaa052/pkg/search"
 )
 
 const (
