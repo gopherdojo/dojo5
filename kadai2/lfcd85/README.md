@@ -12,9 +12,9 @@ $ make bin/convert
 
 ## Usage
 
-Specify the target directory as an argument. The given directory is recursively processed.
+Specify the target directory as an argument. The given directory is recursively processed. Converted files are outputted under `./output/` directory.
 
-コマンド引数に対象ディレクトリを指定してください。ディレクトリ以下は再帰的に処理されます。
+コマンド引数に対象ディレクトリを指定してください。ディレクトリ以下は再帰的に処理されます。変換後のファイルは `./output/` ディレクトリ以下に出力されます。
 
 ```bash
 $ bin/convert test/
