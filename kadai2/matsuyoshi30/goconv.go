@@ -67,7 +67,7 @@ func main() {
 
 func logError(err error, stop bool) {
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		if stop {
 			os.Exit(1)
 		}
