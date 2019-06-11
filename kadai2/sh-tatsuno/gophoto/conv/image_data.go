@@ -51,8 +51,6 @@ func (i *ImageData) Save(path string) error {
 	// if file exist, do nothing
 	if _, err := os.Stat(path); !os.IsNotExist(err) {
 		return nil
-	} else if err != nil {
-		return err
 	}
 
 	dst, err := os.Create(path)

@@ -7,17 +7,17 @@ import (
 	"testing"
 )
 
-func Test_Img(t *testing.T) {
+func Test_ImageData(t *testing.T) {
 	t.Run("OK: .png -> .jpeg", func(t *testing.T) {
 
 		// ### Given ###
-		img, err := NewImg("./lena.jpeg")
+		img, err := NewImageData("./testdata/lena.jpeg")
 		if err != nil {
 			t.Fatalf("Cannot load file. err: %v", err)
 		}
 
 		// ### When ###
-		path := "./lena-png.jpeg"
+		path := "./testdata/lena-png.jpeg"
 		if err = img.Save(path); err != nil {
 			t.Fatalf("Cannot save file. err: %v", err)
 		}
@@ -39,13 +39,13 @@ func Test_Img(t *testing.T) {
 	t.Run("OK: .jpeg -> .png", func(t *testing.T) {
 
 		// ### Given ###
-		img, err := NewImg("./lena.png")
+		img, err := NewImageData("./testdata/lena.png")
 		if err != nil {
 			t.Fatalf("Cannot load file. err: %v", err)
 		}
 
 		// ### When ###
-		path := "./lena-jpeg.png"
+		path := "./testdata/lena-jpeg.png"
 		if err = img.Save(path); err != nil {
 			t.Fatalf("Cannot save file. err: %v", err)
 		}
@@ -67,7 +67,7 @@ func Test_Img(t *testing.T) {
 	t.Run("NG: cannot openfile", func(t *testing.T) {
 
 		// ### Given ###
-		_, err := NewImg("./noexist.png")
+		_, err := NewImageData("./testdata/noexist.png")
 		if err == nil {
 			t.Fatal("Load no exist file.")
 		}
@@ -76,7 +76,7 @@ func Test_Img(t *testing.T) {
 	t.Run("NG: invalid extension", func(t *testing.T) {
 
 		// ### Given ###
-		_, err := NewImg("./img.go")
+		_, err := NewImageData("./img.go")
 		if err == nil {
 			t.Fatal("Load invalid file.")
 		}
