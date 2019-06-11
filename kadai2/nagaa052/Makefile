@@ -9,7 +9,7 @@ all: clean test build
 
 .PHONY: test
 test:
-	$(GO) test -v ./...
+	$(GO) test -v -cover ./...
 
 .PHONY: clean
 clean:
