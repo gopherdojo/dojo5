@@ -8,6 +8,8 @@ import (
 )
 
 func TestGetExtentions(t *testing.T) {
+	t.Parallel()
+
 	errMessage := `
 	Incorrect extension.
 		expected: %s
@@ -35,6 +37,8 @@ func TestGetExtentions(t *testing.T) {
 	}
 
 	for _, c := range cases {
+		c := c
+
 		t.Run(c.name, func(t *testing.T) {
 			i := gocon.ImgFormat(c.format)
 			actual, err := i.GetExtentions()

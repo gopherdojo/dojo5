@@ -10,6 +10,8 @@ import (
 )
 
 func TestWalk(t *testing.T) {
+	t.Parallel()
+
 	errMessage := `
 	The quantity found is different.
 		expected: %d
@@ -27,6 +29,8 @@ func TestWalk(t *testing.T) {
 
 	path := filepath.Join("testdata", t.Name())
 	for _, c := range cases {
+		c := c
+
 		t.Run(c.name, func(t *testing.T) {
 			actual := 0
 			search.WalkWithExtHandle(path, c.ext, func(path string, info os.FileInfo, err error) {

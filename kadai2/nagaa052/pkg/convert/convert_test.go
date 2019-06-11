@@ -10,6 +10,8 @@ import (
 )
 
 func TestToJpeg(t *testing.T) {
+	t.Parallel()
+
 	errMessage := `
 	Expected and actual are different.
 		expected: %v
@@ -50,6 +52,8 @@ func TestToJpeg(t *testing.T) {
 	}
 
 	for _, c := range cases {
+		c := c
+
 		t.Run(c.name, func(t *testing.T) {
 			con, err := convert.New(c.srcPath, destDir)
 			if err != nil {
@@ -75,6 +79,8 @@ func TestToJpeg(t *testing.T) {
 }
 
 func TestToPng(t *testing.T) {
+	t.Parallel()
+
 	errMessage := `
 	Expected and actual are different.
 		expected: %v
@@ -89,35 +95,42 @@ func TestToPng(t *testing.T) {
 	outDir := filepath.Join(sourceBase, "out")
 
 	cases := []struct {
+		name       string
 		sourcePath string
 		expected   string
 		isError    bool
 	}{
 		{
+			name:       "success test",
 			sourcePath: filepath.Join(sourceBase, "1.jpg"),
 			expected:   filepath.Join(outDir, "1.png"),
 			isError:    false,
 		},
 		{
+			name:       "failed test",
 			sourcePath: filepath.Join(sourceBase, "1.jpg"),
 			expected:   "",
 			isError:    true,
 		},
 	}
 	for _, c := range cases {
-		con, err := convert.New(c.sourcePath, outDir)
-		if err != nil {
-			t.Error(err)
-		}
+		c := c
 
-		actual, err := con.ToPng()
-		if c.isError && err == nil {
-			t.Error(err)
-		}
+		t.Run(c.name, func(t *testing.T) {
+			con, err := convert.New(c.sourcePath, outDir)
+			if err != nil {
+				t.Error(err)
+			}
 
-		if actual != c.expected {
-			t.Error(fmt.Sprintf(errMessage, c.expected, actual))
-		}
+			actual, err := con.ToPng()
+			if c.isError && err == nil {
+				t.Error(err)
+			}
+
+			if actual != c.expected {
+				t.Error(fmt.Sprintf(errMessage, c.expected, actual))
+			}
+		})
 	}
 
 	if _, err := os.Stat(outDir); err == nil {

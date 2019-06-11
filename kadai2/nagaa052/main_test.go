@@ -8,6 +8,7 @@ import (
 )
 
 func TestParseOptions(t *testing.T) {
+	t.Parallel()
 
 	cases := []struct {
 		name         string
@@ -42,6 +43,8 @@ func TestParseOptions(t *testing.T) {
 	`
 
 	for _, c := range cases {
+		c := c
+
 		t.Run(c.name, func(t *testing.T) {
 			imageFormat = fmt.Sprintf("%s:%s", c.expectedFrom, c.expectedTo)
 			opt, err := parseOptions()

@@ -12,6 +12,8 @@ import (
 )
 
 func TestRun(t *testing.T) {
+	t.Parallel()
+
 	errMessage := `
 	It was not converted properly.
 		Error: %v
@@ -49,6 +51,7 @@ func TestRun(t *testing.T) {
 	}
 
 	for _, c := range cases {
+		c := c
 		t.Run(c.name, func(t *testing.T) {
 			outStream, errStream := new(bytes.Buffer), new(bytes.Buffer)
 			g, err := gocon.New(srcDir, c.options, outStream, errStream)
