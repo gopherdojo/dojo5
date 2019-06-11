@@ -35,18 +35,27 @@ func Test_Convert(t *testing.T) {
 		{testCase: "P2G", decodeFile: "../testdata/cat.png", encodeFile: "../testdata/cat.gif", decodeType: "png", encodeType: "gif"},
 		{testCase: "G2J", decodeFile: "../testdata/cat.gif", encodeFile: "../testdata/cat.jpg", decodeType: "gif", encodeType: "jpg"},
 		{testCase: "G2P", decodeFile: "../testdata/cat.gif", encodeFile: "../testdata/cat.png", decodeType: "gif", encodeType: "png"},
+		{testCase: "errorCase", decodeFile: "../testdata/error", encodeFile: "../testdata/cat.png", decodeType: "gif", encodeType: "png"},
+		{testCase: "errorCase", decodeFile: "../testdata/cat.jpg", encodeFile: "../testdata/cat.png", decodeType: "tiff", encodeType: "png"},
+		{testCase: "errorCase", decodeFile: "../testdata/cat.jpg", encodeFile: "../testdata/cat.png", decodeType: "jpg", encodeType: "tiff"},
 	}
 
 	for _, c := range cases {
 		c := c
 		t.Run(c.testCase, func(t *testing.T) {
 			err := Convert(c.decodeFile, c.decodeType, c.encodeType)
-			if err != nil {
+
+			if c.testCase != "errorCase" && err != nil {
 				t.Errorf(
 					"Case (%s) Failed test: Convert error.",
 					c.testCase)
 			}
 			fileAssertionHelper(t, c.testCase, c.encodeFile)
+			if c.testCase == "errorCase" && err == nil {
+				t.Errorf(
+					"Case (%s) Failed test: Convert error.",
+					c.testCase)
+			}
 		})
 	}
 }
