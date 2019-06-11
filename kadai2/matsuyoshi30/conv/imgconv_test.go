@@ -38,7 +38,7 @@ func TestImgconv(t *testing.T) {
 func testImgconv_pass(t *testing.T, from, to ImageType, input, output string) {
 	t.Helper()
 	if err := Imgconv(from, to, input); err != nil {
-		t.Errorf("input: %v (%v -> %v): %v", input, from, to, err)
+		t.Fatal("input: %v (%v -> %v): %v", input, from, to, err)
 	}
 
 	clean(output)
@@ -47,6 +47,6 @@ func testImgconv_pass(t *testing.T, from, to ImageType, input, output string) {
 func testImgconv_fail(t *testing.T, from, to ImageType, input string) {
 	t.Helper()
 	if err := Imgconv(from, to, input); err == nil {
-		t.Errorf("Expected error")
+		t.Fatal("Expected error")
 	}
 }
