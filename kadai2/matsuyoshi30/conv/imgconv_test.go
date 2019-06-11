@@ -2,47 +2,51 @@ package conv
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 )
 
-const (
-	testfile1 = "../test/test1/appenginegophercolor.jpg"
-	testfile2 = "../test/test1/appenginelogo.gif"
-	testfile3 = "../test/test1/bumper.png"
-	testfile4 = "../test/test2/dummy.jpeg"
+const TESTDIR = "../testdata/"
 
-	outfile1 = "../test/test1/appenginegophercolor.png" // jpg -> png
-	outfile2 = "../test/test1/appenginelogo.jpeg"       // gif -> jpg
-	outfile3 = "../test/test1/bumper.gif"               // png -> gif
-)
-
-func clean() {
-	os.Remove(outfile1)
-	os.Remove(outfile2)
-	os.Remove(outfile3)
+func clean(filename string) {
+	os.Remove(filename)
 }
 
 func TestImgconv(t *testing.T) {
-	testImgconv_pass(t)
-	testImgconv_fail(t)
+	// SUCCESS CASE
+	t.Run("goconv pass", func(t *testing.T) {
+		testcases := []struct {
+			input  string
+			output string
+		}{
+			{"appenginegophercolor.jpg", "appenginegophercolor.png"},
+			{"appenginelogo.gif", "appenginelogo.jpeg"},
+			{"bumper.png", "bumper.gif"},
+		}
+
+		for _, tc := range testcases {
+			testImgconv_pass(t, JPEG, PNG, filepath.Join(TESTDIR, tc.input), filepath.Join(TESTDIR, tc.output))
+		}
+	})
+
+	// FAIL CASE
+	t.Run("goconv fail", func(t *testing.T) {
+		testImgconv_fail(t, JPEG, PNG, filepath.Join(TESTDIR, "dummy.jpeg"))
+	})
 }
 
-func testImgconv_pass(t *testing.T) {
-	if err := Imgconv(JPEG, PNG, testfile1); err != nil {
-		t.Errorf("jpeg -> png: %v", err)
-	}
-	if err := Imgconv(GIF, JPEG, testfile2); err != nil {
-		t.Errorf("gif -> jpeg: %v", err)
-	}
-	if err := Imgconv(PNG, GIF, testfile3); err != nil {
-		t.Errorf("png -> gif: %v", err)
+func testImgconv_pass(t *testing.T, from, to ImageType, input, output string) {
+	t.Helper()
+	if err := Imgconv(from, to, input); err != nil {
+		t.Errorf("input: %v (%v -> %v): %v", input, from, to, err)
 	}
 
-	clean()
+	clean(output)
 }
 
-func testImgconv_fail(t *testing.T) {
-	if err := Imgconv(JPEG, PNG, testfile4); err == nil {
+func testImgconv_fail(t *testing.T, from, to ImageType, input string) {
+	t.Helper()
+	if err := Imgconv(from, to, input); err == nil {
 		t.Errorf("Expected error")
 	}
 }
