@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
-	"github.com/matsuyoshi30/dojo5/kadai1/matsuyoshi30/conv"
+	"github.com/matsuyoshi30/dojo5/kadai2/matsuyoshi30/conv"
+	"github.com/matsuyoshi30/dojo5/kadai2/matsuyoshi30/opt"
 )
 
 // usage
@@ -28,13 +28,11 @@ GLOBAL OPTIONS:
 `
 
 func main() {
-	// 引数の長さを確認する
 	if len(os.Args) < 2 {
 		fmt.Println(usage)
 		return
 	}
 
-	// フラグを読み込む
 	var from, to string
 	var sh bool
 	flag.StringVar(&from, "from", "jpeg", "Choose format before converted")
@@ -42,13 +40,11 @@ func main() {
 	flag.BoolVar(&sh, "h", false, "Show help")
 	flag.Parse()
 
-	// ヘルプフラグがオンの場合、ヘルプを表示して終了する
 	if sh {
 		fmt.Println(usage)
 		return
 	}
 
-	// フラグで指定されたフォーマットを ImageType 型に置き換える
 	fromtype, err := conv.SelectFormat(from)
 	if err != nil {
 		logError(err, true)
@@ -57,8 +53,7 @@ func main() {
 	if err != nil {
 		logError(err, true)
 	}
-
-	dirlist := OptPath(flag.Args())
+	dirlist := opt.OptPath(flag.Args())
 
 	if len(dirlist) < 1 {
 		fmt.Println(usage)
@@ -68,30 +63,6 @@ func main() {
 			logError(err, false)
 		}
 	}
-}
-
-func OptPath(paths []string) []string {
-	dirlist := make([]string, 0)
-	for _, p := range paths {
-		if !contains(dirlist, p) {
-			dirlist = append(dirlist, p)
-		}
-	}
-
-	return dirlist
-}
-
-func contains(s []string, e string) bool {
-	if len(s) == 0 {
-		return false
-	}
-
-	for _, v := range s {
-		if strings.HasPrefix(v, e) || strings.HasPrefix(e, v) {
-			return true
-		}
-	}
-	return false
 }
 
 func logError(err error, stop bool) {
