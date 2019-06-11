@@ -5,6 +5,22 @@ import (
 	"testing"
 )
 
+func fileAssertionHelper(t *testing.T, testCase string, file string) {
+	t.Helper()
+	// 変換後のファイルが存在するかチェック
+	info, err := os.Stat(file)
+	if err != nil {
+		t.Errorf("Case (%s) Failed test: File not generated",
+			testCase)
+	}
+	//　変換後のファイルサイズが0バイトではないかチェック
+	if info.Size() <= 0 {
+		t.Errorf("Case (%s) Failed test: Encoded file is invalid",
+			testCase)
+	}
+
+}
+
 func Test_Convert(t *testing.T) {
 	cases := []struct {
 		testCase   string
@@ -30,17 +46,7 @@ func Test_Convert(t *testing.T) {
 					"Case (%s) Failed test: Convert error.",
 					c.testCase)
 			}
-			// 変換後のファイルが存在するかチェック
-			info, err := os.Stat(c.encodeFile)
-			if err != nil {
-				t.Errorf("Case (%s) Failed test: File not generated",
-					c.testCase)
-			}
-			//　変換後のファイルサイズが0バイトではないかチェック
-			if info.Size() <= 0 {
-				t.Errorf("Case (%s) Failed test: Encoded file is invalid",
-					c.testCase)
-			}
+			fileAssertionHelper(t, c.testCase, c.encodeFile)
 		})
 	}
 }
