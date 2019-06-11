@@ -1,6 +1,7 @@
 package conv
 
 import (
+	"errors"
 	"fmt"
 	"image"
 	"image/gif"
@@ -14,10 +15,9 @@ import (
 type ImageType string
 
 const (
-	JPEG ImageType = ".jpeg"
-	JPG  ImageType = ".jpg"
-	PNG  ImageType = ".png"
-	GIF  ImageType = ".gif"
+	JPEG ImageType = "jpeg"
+	PNG  ImageType = "png"
+	GIF  ImageType = "gif"
 )
 
 // Imgconv dirpath 配下にある、bf に指定されたフォーマットの画像を、af に指定されたフォーマットの画像に変換する
@@ -25,7 +25,11 @@ func Imgconv(fromtype, totype ImageType, dirpath string) error {
 	filelist := make([]string, 0)
 	err := filepath.Walk(dirpath, func(fp string, info os.FileInfo, err error) error {
 		if info.Mode().IsRegular() {
-			ext := ImageType(filepath.Ext(fp))
+			ext := ImageType(filepath.Ext(fp)[1:])
+			if err != nil {
+				return err
+			}
+
 			if ext == fromtype {
 				filelist = append(filelist, fp)
 			}
@@ -36,14 +40,14 @@ func Imgconv(fromtype, totype ImageType, dirpath string) error {
 		return err
 	}
 
-	return imgconv(totype, filelist)
+	return imgconv(fromtype, totype, filelist)
 }
 
 // imgconv filelist内の、bf に指定されたフォーマットの画像を、af に指定されたフォーマットの画像に変換する
-func imgconv(totype ImageType, filelist []string) error {
+func imgconv(fromtype, totype ImageType, filelist []string) error {
 	for _, f := range filelist {
 		fmt.Printf("INPUT: %s", filepath.Base(f))
-		img, err := decoder(f)
+		img, err := decoder(f, fromtype)
 		if err != nil {
 			return err
 		}
@@ -56,22 +60,25 @@ func imgconv(totype ImageType, filelist []string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf(" => OUTPUT: %s%s\n", of, totype)
+		fmt.Printf(" => OUTPUT: %s.%s\n", of, totype)
 	}
 
 	return nil
 }
 
 // decoder filename というファイル（フォーマットが format ）をデコードして image.Image を返す
-func decoder(filename string) (image.Image, error) {
+func decoder(filename string, fromtype ImageType) (image.Image, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
-	// TODO: format とファイルの内容が一致しているか
-	img, _, err := image.Decode(file)
+	img, encode, err := image.Decode(file)
+
+	if ImageType(encode) != fromtype {
+		return nil, errors.New("Does not match file and format")
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +88,7 @@ func decoder(filename string) (image.Image, error) {
 
 // encoder img という image.Image を、filename というファイル（フォーマットが format ）にエンコードして出力する
 func encoder(img image.Image, filename string, format ImageType) error {
-	out, err := os.Create(fmt.Sprintf("%s%s", filename, format))
+	out, err := os.Create(fmt.Sprintf("%s.%s", filename, format))
 	if err != nil {
 		return err
 	}
@@ -89,7 +96,6 @@ func encoder(img image.Image, filename string, format ImageType) error {
 
 	switch format {
 	case JPEG:
-	case JPG:
 		convertToJpeg(out, img)
 	case PNG:
 		convertToPng(out, img)
@@ -112,4 +118,21 @@ func convertToJpeg(out *os.File, img image.Image) {
 
 func convertToGif(out *os.File, img image.Image) {
 	gif.Encode(out, img, nil)
+}
+
+// selectFormat はフラグに指定されたフォーマットの文字列を見て ImageType 型を返す
+func SelectFormat(f string) (ImageType, error) {
+	switch f {
+	case "jpeg":
+		return JPEG, nil
+	case "jpg":
+		return JPEG, nil
+	case "png":
+		return PNG, nil
+	case "gif":
+		return GIF, nil
+	default:
+		return "", errors.New("Unsupport format")
+	}
+	return "", errors.New("Unknown format")
 }

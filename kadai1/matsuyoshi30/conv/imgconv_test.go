@@ -9,6 +9,7 @@ const (
 	testfile1 = "../test/test1/appenginegophercolor.jpg"
 	testfile2 = "../test/test1/appenginelogo.gif"
 	testfile3 = "../test/test1/bumper.png"
+	testfile4 = "../test/test2/dummy.jpeg"
 
 	outfile1 = "../test/test1/appenginegophercolor.png" // jpg -> png
 	outfile2 = "../test/test1/appenginelogo.jpeg"       // gif -> jpg
@@ -22,15 +23,26 @@ func clean() {
 }
 
 func TestImgconv(t *testing.T) {
-	if err := Imgconv(JPG, PNG, testfile1); err != nil {
-		t.Errorf("jpg -> png: %v", err)
+	testImgconv_pass(t)
+	testImgconv_fail(t)
+}
+
+func testImgconv_pass(t *testing.T) {
+	if err := Imgconv(JPEG, PNG, testfile1); err != nil {
+		t.Errorf("jpeg -> png: %v", err)
 	}
 	if err := Imgconv(GIF, JPEG, testfile2); err != nil {
-		t.Errorf("gif -> jpg: %v", err)
+		t.Errorf("gif -> jpeg: %v", err)
 	}
 	if err := Imgconv(PNG, GIF, testfile3); err != nil {
 		t.Errorf("png -> gif: %v", err)
 	}
 
 	clean()
+}
+
+func testImgconv_fail(t *testing.T) {
+	if err := Imgconv(JPEG, PNG, testfile4); err == nil {
+		t.Errorf("Expected error")
+	}
 }

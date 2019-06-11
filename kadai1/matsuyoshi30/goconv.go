@@ -37,7 +37,7 @@ func main() {
 	// フラグを読み込む
 	var from, to string
 	var sh bool
-	flag.StringVar(&from, "from", "jpg", "Choose format before converted")
+	flag.StringVar(&from, "from", "jpeg", "Choose format before converted")
 	flag.StringVar(&to, "to", "png", "Choose format after converted")
 	flag.BoolVar(&sh, "h", false, "Show help")
 	flag.Parse()
@@ -49,8 +49,14 @@ func main() {
 	}
 
 	// フラグで指定されたフォーマットを ImageType 型に置き換える
-	fromtype := selectFormat(from)
-	totype := selectFormat(to)
+	fromtype, err := conv.SelectFormat(from)
+	if err != nil {
+		logError(err, true)
+	}
+	totype, err := conv.SelectFormat(to)
+	if err != nil {
+		logError(err, true)
+	}
 
 	dirlist := OptPath(flag.Args())
 
@@ -62,23 +68,6 @@ func main() {
 			logError(err, false)
 		}
 	}
-}
-
-// selectFormat はフラグに指定されたフォーマットの文字列を見て ImageType 型を返す
-func selectFormat(f string) conv.ImageType {
-	switch f {
-	case "jpeg":
-		return conv.JPEG
-	case "jpg":
-		return conv.JPG
-	case "png":
-		return conv.PNG
-	case "gif":
-		return conv.GIF
-	default:
-		log.Fatal("Unknown format")
-	}
-	return ""
 }
 
 func OptPath(paths []string) []string {
