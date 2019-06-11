@@ -97,17 +97,22 @@ func TestConverter_GenerateOutputPath(t *testing.T) {
 		{
 			"path/to/hoge.jpg",
 			ImgFmt("png"),
-			"path/to/hoge.png",
+			"./output/path/to/hoge.png",
 		},
 		{
 			"./path/to/fuga.PNG",
 			ImgFmt("jpeg"),
-			"./path/to/fuga.jpg",
+			"./output/path/to/fuga.jpg",
 		},
 		{
 			"piyo.png",
 			ImgFmt("gif"),
-			"piyo.gif",
+			"./output/piyo.gif",
+		},
+		{
+			"../../path/to/foobar.gif",
+			ImgFmt("jpeg"),
+			"./output/path/to/foobar.jpg",
 		},
 	}
 

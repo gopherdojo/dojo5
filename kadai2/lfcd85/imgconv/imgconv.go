@@ -62,8 +62,7 @@ func Convert(dir string, from string, to string) error {
 
 func (cv *Converter) convSingleFile(path string, info os.FileInfo) error {
 	if info.IsDir() {
-		// FIXME: create output directories
-		outputPath := "./output/" + strings.TrimLeft(path, "./")
+		outputPath := addOutputDir(path)
 		return os.MkdirAll(outputPath, 0777)
 	}
 	if !cv.fmtFrom.Match(cv, info.Name()) {
@@ -85,8 +84,7 @@ func (cv *Converter) convSingleFile(path string, info os.FileInfo) error {
 }
 
 func (cv *Converter) writeOutputFile(img image.Image, path string) error {
-	// FIXME: temporarily separate input and output directories
-	outputPath := "./output/" + strings.TrimLeft(cv.generateOutputPath(path), "./")
+	outputPath := cv.generateOutputPath(path)
 
 	f, err := os.Create(outputPath)
 	if err != nil {
@@ -127,7 +125,15 @@ func (cv *Converter) encodeImg(w io.Writer, img image.Image) error {
 func (cv *Converter) generateOutputPath(path string) string {
 	dirAndBase := strings.TrimRight(path, filepath.Ext(path))
 	ext := cv.imgFmtExts.ConvToExt(cv.fmtTo)
-	return strings.Join([]string{dirAndBase, string(ext)}, ".")
+	path = strings.Join([]string{dirAndBase, string(ext)}, ".")
+	return addOutputDir(path)
+}
+
+func addOutputDir(path string) string {
+	return strings.Join([]string{
+		"./output",
+		strings.TrimLeft(path, "./"),
+	}, "/")
 }
 
 // Detect specifies image format from file extension string.
