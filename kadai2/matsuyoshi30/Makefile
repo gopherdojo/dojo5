@@ -2,6 +2,10 @@ BIN := goconv
 GODOCCMD := godoc
 GODOCPORT := 6060
 GODOCPATH := /github.com/matsuyoshi30/dojo5/kadai2/matsuyoshi30/
+GOCOVPKG1 := conv
+GOCOVPROFILE1 := $(GOCOVPKG1)profile
+GOCOVPKG2 := opt
+GOCOVPROFILE2 := $(GOCOVPKG2)profile
 
 .PHONY: build
 build:
@@ -15,6 +19,14 @@ clean:
 .PHONY: test
 test: build
 	go test -v ./...
+
+.PHONY: cover
+cover: build
+	rm $(GOCOVPROFILE1) $(GOCOVPROFILE2)
+	go test -coverprofile=$(GOCOVPROFILE1) ./$(GOCOVPKG1)
+	go test -coverprofile=$(GOCOVPROFILE2) ./$(GOCOVPKG2)
+	go tool cover -html=$(GOCOVPROFILE1)
+	go tool cover -html=$(GOCOVPROFILE2)
 
 .PHONY: doc
 doc:
