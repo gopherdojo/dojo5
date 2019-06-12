@@ -9,6 +9,7 @@ import (
 	"image/png"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
 // ImageType 画像の拡張子
@@ -21,7 +22,8 @@ const (
 )
 
 // Imgconv dirpath 配下にある、bf に指定されたフォーマットの画像を、af に指定されたフォーマットの画像に変換する
-func Imgconv(fromtype, totype ImageType, dirpath string) error {
+func Imgconv(fromtype, totype ImageType, dirpath string) []error {
+	var errors []error
 	filelist := make([]string, 0)
 	err := filepath.Walk(dirpath, func(fp string, info os.FileInfo, err error) error {
 		if info.Mode().IsRegular() {
@@ -37,33 +39,44 @@ func Imgconv(fromtype, totype ImageType, dirpath string) error {
 		return nil
 	})
 	if err != nil {
-		return err
+		errors = append(errors, err)
+		return errors
 	}
 
 	return imgconv(fromtype, totype, filelist)
 }
 
 // imgconv filelist内の、bf に指定されたフォーマットの画像を、af に指定されたフォーマットの画像に変換する
-func imgconv(fromtype, totype ImageType, filelist []string) error {
+func imgconv(fromtype, totype ImageType, filelist []string) []error {
+	var e []error
+	wg := &sync.WaitGroup{}
 	for _, f := range filelist {
-		fmt.Printf("INPUT: %s", filepath.Base(f))
-		img, err := decoder(f, fromtype)
-		if err != nil {
-			return err
-		}
+		wg.Add(1)
+		go func(filename string) {
+			defer wg.Done()
 
-		dir, fn := filepath.Split(f)
-		of := filepath.Base(fn[:len(fn)-len(filepath.Ext(fn))])
-		outfile := filepath.Join(dir, of)
+			fmt.Printf("INPUT: %s", filepath.Base(filename))
+			img, err := decoder(filename, fromtype)
+			if err != nil {
+				e = append(e, err)
+				return
+			}
 
-		err = encoder(img, outfile, totype)
-		if err != nil {
-			return err
-		}
-		fmt.Printf(" => OUTPUT: %s.%s\n", of, totype)
+			dir, fn := filepath.Split(filename)
+			of := filepath.Base(fn[:len(fn)-len(filepath.Ext(fn))])
+			outfile := filepath.Join(dir, of)
+
+			err = encoder(img, outfile, totype)
+			if err != nil {
+				e = append(e, err)
+				return
+			}
+			fmt.Printf(" => OUTPUT: %s.%s\n", of, totype)
+		}(f)
 	}
+	wg.Wait()
 
-	return nil
+	return e
 }
 
 // decoder filename というファイル（フォーマットが format ）をデコードして image.Image を返す

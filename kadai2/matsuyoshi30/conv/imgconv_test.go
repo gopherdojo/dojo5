@@ -12,7 +12,7 @@ const TESTDIR = "../testdata/"
 
 var (
 	normal = filepath.Join(TESTDIR, "normal")
-	gr     = filepath.Join(TESTDIR, "gr")
+	wg     = filepath.Join(TESTDIR, "wg")
 	dummy  = filepath.Join(TESTDIR, "dummy")
 )
 
@@ -32,7 +32,8 @@ func TestImgconv(t *testing.T) {
 		{"test1", "SUCCESS", conv.JPEG, conv.PNG, normal, "appenginegophercolor.png"},
 		{"test2", "SUCCESS", conv.GIF, conv.JPEG, normal, "appenginelogo.jpeg"},
 		{"test3", "SUCCESS", conv.PNG, conv.GIF, normal, "bumper.gif"},
-		{"test4", "FAIL", conv.JPEG, conv.PNG, dummy, "dummy.png"},
+		{"test4", "SUCCESS", conv.JPEG, conv.PNG, wg, "*.png"},
+		{"test5", "FAIL", conv.JPEG, conv.PNG, dummy, "dummy.png"},
 	}
 
 	for _, tt := range testcases {

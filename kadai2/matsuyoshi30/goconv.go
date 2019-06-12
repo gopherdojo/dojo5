@@ -65,11 +65,13 @@ func main() {
 	}
 }
 
-func logError(err error, stop bool) {
-	if err != nil {
-		log.Println(err)
-		if stop {
-			os.Exit(1)
+func logError(err []error, stop bool) {
+	for _, e := range err {
+		if e != nil {
+			log.Println(e)
+			if stop {
+				os.Exit(1)
+			}
 		}
 	}
 }
