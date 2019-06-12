@@ -1,55 +1,65 @@
-package conv
+package conv_test
 
 import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/matsuyoshi30/dojo5/kadai2/matsuyoshi30/conv"
 )
 
 const TESTDIR = "../testdata/"
+
+var (
+	normal = filepath.Join(TESTDIR, "normal")
+	gr     = filepath.Join(TESTDIR, "gr")
+	dummy  = filepath.Join(TESTDIR, "dummy")
+)
 
 func clean(filename string) {
 	os.Remove(filename)
 }
 
 func TestImgconv(t *testing.T) {
-	// SUCCESS CASE
-	t.Run("goconv pass", func(t *testing.T) {
-		testcases := []struct {
-			inputtype  ImageType
-			outputtype ImageType
-			input      string
-			output     string
-		}{
-			{JPEG, PNG, "appenginegophercolor.jpg", "appenginegophercolor.png"},
-			{GIF, JPEG, "appenginelogo.gif", "appenginelogo.jpeg"},
-			{PNG, GIF, "bumper.png", "bumper.gif"},
-		}
+	testcases := []struct {
+		name       string
+		testtype   string
+		inputtype  conv.ImageType
+		outputtype conv.ImageType
+		inputdir   string
+		output     string
+	}{
+		{"test1", "SUCCESS", conv.JPEG, conv.PNG, normal, "appenginegophercolor.png"},
+		{"test2", "SUCCESS", conv.GIF, conv.JPEG, normal, "appenginelogo.jpeg"},
+		{"test3", "SUCCESS", conv.PNG, conv.GIF, normal, "bumper.gif"},
+		{"test4", "FAIL", conv.JPEG, conv.PNG, dummy, "dummy.png"},
+	}
 
-		for _, tc := range testcases {
-			testImgconv_pass(t, tc.inputtype, tc.outputtype,
-				filepath.Join(TESTDIR, tc.input), filepath.Join(TESTDIR, tc.output))
-		}
-	})
-
-	// FAIL CASE
-	t.Run("goconv fail", func(t *testing.T) {
-		testImgconv_fail(t, JPEG, PNG, filepath.Join(TESTDIR, "dummy.jpeg"))
-	})
+	for _, tt := range testcases {
+		t.Run(tt.name, func(t *testing.T) {
+			switch tt.testtype {
+			case "SUCCESS":
+				testImgconv_pass(t, tt.inputtype, tt.outputtype,
+					tt.inputdir, filepath.Join(tt.inputdir, tt.output))
+			case "FAIL":
+				testImgconv_fail(t, tt.inputtype, tt.outputtype, tt.inputdir)
+			}
+		})
+	}
 }
 
-func testImgconv_pass(t *testing.T, from, to ImageType, input, output string) {
+func testImgconv_pass(t *testing.T, from conv.ImageType, to conv.ImageType, dir string, output string) {
 	t.Helper()
-	if err := Imgconv(from, to, input); err != nil {
-		t.Fatalf("input: %v (%v -> %v): %v", input, from, to, err)
+	if err := conv.Imgconv(from, to, dir); err != nil {
+		t.Fatalf("DIR: %v (%v -> %v): %v", dir, from, to, err)
 	}
 
 	clean(output)
 }
 
-func testImgconv_fail(t *testing.T, from, to ImageType, input string) {
+func testImgconv_fail(t *testing.T, from conv.ImageType, to conv.ImageType, dir string) {
 	t.Helper()
-	if err := Imgconv(from, to, input); err == nil {
+	if err := conv.Imgconv(from, to, dir); err == nil {
 		t.Fatal("Expected error")
 	}
 }

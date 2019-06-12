@@ -18,7 +18,7 @@ clean:
 
 .PHONY: test
 test: build
-	go test -v ./...
+	go test -race ./...
 
 .PHONY: cover
 cover: build
