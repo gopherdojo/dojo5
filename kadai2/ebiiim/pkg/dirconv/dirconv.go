@@ -68,8 +68,7 @@ func (dc *DirConv) Convert() ([]*Result, error) {
 			logStr := fmt.Sprintf("%s -> %s", oldFileName, newFileName)
 
 			// make a new Converter and initialize it
-			var converter conv.Converter
-			converter = &conv.ImgConv{SrcPath: oldFileName, SrcExt: dc.SrcExt, TgtPath: newFileName, TgtExt: dc.TgtExt, Options: nil}
+			converter := &conv.ImgConv{SrcPath: oldFileName, SrcExt: dc.SrcExt, TgtPath: newFileName, TgtExt: dc.TgtExt, Options: nil}
 
 			// do convert and check the result
 			err := converter.Convert()

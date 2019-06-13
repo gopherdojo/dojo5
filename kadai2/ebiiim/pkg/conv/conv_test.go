@@ -12,7 +12,7 @@ func removeFile(t *testing.T, path string) {
 	t.Helper()
 	err := os.Remove(path)
 	if err != nil {
-		t.Errorf("failed to remove file %v %v", path, err)
+		t.Fatalf("failed to remove file %v %v", path, err)
 	}
 }
 
@@ -52,20 +52,20 @@ func TestImgConv_Convert(t *testing.T) {
 	}
 	// NOTE: this test cannot be run in parallel
 	for _, c := range cases {
-		var converter conv.Converter
-		converter = &conv.ImgConv{SrcPath: c.src, SrcExt: c.srcExt, TgtPath: c.tgt, TgtExt: c.tgtExt, Options: c.opt}
+		converter := &conv.ImgConv{SrcPath: c.src, SrcExt: c.srcExt, TgtPath: c.tgt, TgtExt: c.tgtExt, Options: c.opt}
 		err := converter.Convert()
 		if !((err != nil) == c.isErr) {
 			t.Errorf("ImgConv %v, want %v(isErr), got %v", converter, c.isErr, err)
 		}
 		// verify file
 		stat, err := os.Stat(c.tgt)
-		switch c.isErr {
-		case true: // WHEN c.isErr THEN (file does not exist) or (file is a dir)
+		if c.isErr {
+			// WHEN c.isErr THEN (file does not exist) or (file is a dir)
 			if !(err != nil || stat.IsDir()) {
 				t.Errorf("failed delete %s", c.tgt)
 			}
-		case false: // WHEN !c.isErr THEN (file exists) and (file is not a dir)
+		} else {
+			// WHEN !c.isErr THEN (file exists) and (file is not a dir)
 			if !(err == nil && !stat.IsDir()) {
 				t.Errorf("file does not found %s", c.tgt)
 			}

@@ -19,7 +19,7 @@ func TraverseImageFiles(targetDir string, ext img.Ext) ([]string, error) {
 	// check the dir exists
 	fileInfo, err := os.Stat(targetDir)
 	if err != nil {
-		return files, err // if the dir does not exist, return an empty slice
+		return files, err // if the dir does not exist, return a zero value slice (=nil)
 	}
 	if !fileInfo.IsDir() {
 		return files, fmt.Errorf("%s is not a directory", targetDir)

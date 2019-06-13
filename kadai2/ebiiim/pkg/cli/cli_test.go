@@ -11,9 +11,9 @@ import (
 
 // TODO: table driven test
 //func TestIsInvalidArgs(t *testing.T) {
-//	e1 := &cli.invalidArgsException{}
-//	e2 := fmt.Errorf("")
-//	if cli.IsInvalidArgs(e1) != true || cli.IsInvalidArgs(e2) != false {
+//	e1 := cli.invalidArgsException
+//	e2 := errors.New("")
+//	if !cli.IsInvalidArgs(e1) || cli.IsInvalidArgs(e2) {
 //		t.Errorf("error %v %v", e1, e2)
 //	}
 //}
