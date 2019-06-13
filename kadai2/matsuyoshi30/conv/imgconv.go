@@ -65,6 +65,7 @@ func imgconv(fromtype, totype ImageType, filelist []string) ([]string, []error) 
 				e = append(e, err)
 			} else {
 				s = fmt.Sprintf("%s => OUTPUT: %s.%s", s, of, totype)
+				result = append(result, s)
 			}
 		}
 	}
