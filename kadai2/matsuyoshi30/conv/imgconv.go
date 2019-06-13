@@ -9,7 +9,6 @@ import (
 	"image/png"
 	"os"
 	"path/filepath"
-	"sync"
 )
 
 // ImageType 画像の拡張子
@@ -51,43 +50,24 @@ func imgconv(fromtype, totype ImageType, filelist []string) ([]string, []error) 
 	var e []error
 	var result []string
 
-	reschan := make(chan string, 2)
-	errchan := make(chan error, 2)
-	wg := &sync.WaitGroup{}
-	for _, f := range filelist {
-		wg.Add(1)
-		go func(filename string) {
-			defer wg.Done()
-
-			var s string
-
-			s = fmt.Sprintf("INPUT: %s", filepath.Base(filename))
-			img, err := decoder(filename, fromtype)
-			if err != nil {
-				errchan <- err
-			} else {
-				dir, fn := filepath.Split(filename)
-				of := filepath.Base(fn[:len(fn)-len(filepath.Ext(fn))])
-				outfile := filepath.Join(dir, of)
-
-				err = encoder(img, outfile, totype)
-				if err != nil {
-					errchan <- err
-				} else {
-					s = fmt.Sprintf("%s => OUTPUT: %s.%s", s, of, totype)
-					reschan <- s
-				}
-			}
-		}(f)
-
-		select {
-		case res := <-reschan:
-			result = append(result, res)
-		case err := <-errchan:
+	for _, filename := range filelist {
+		s := fmt.Sprintf("INPUT: %s", filepath.Base(filename))
+		img, err := decoder(filename, fromtype)
+		if err != nil {
 			e = append(e, err)
+		} else {
+			dir, fn := filepath.Split(filename)
+			of := filepath.Base(fn[:len(fn)-len(filepath.Ext(fn))])
+			outfile := filepath.Join(dir, of)
+
+			err = encoder(img, outfile, totype)
+			if err != nil {
+				e = append(e, err)
+			} else {
+				s = fmt.Sprintf("%s => OUTPUT: %s.%s", s, of, totype)
+			}
 		}
 	}
-	wg.Wait()
 
 	return result, e
 }
