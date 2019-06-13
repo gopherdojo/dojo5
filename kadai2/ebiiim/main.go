@@ -21,11 +21,11 @@ func main() {
 			// unexpected error
 			fmt.Fprintf(os.Stderr, "%v", err)
 		}
-		os.Exit(0)
+		os.Exit(1)
 	}
 	_, err = dc.Convert()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
-		os.Exit(0)
+		os.Exit(1)
 	}
 }
