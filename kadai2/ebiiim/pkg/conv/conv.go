@@ -95,7 +95,7 @@ func encodeImg(writer io.Writer, ext img.Ext, pImage *image.Image, options map[s
 func decodeImg(reader io.Reader, ext img.Ext) (image.Image, error) {
 	vImage, format, err := image.Decode(reader)
 	if err != nil {
-		return vImage, errors.Wrap(err, "invalid image data")
+		return nil, errors.Wrap(err, "invalid image data")
 	}
 	// verify decoded image format
 	imgExt, err := img.ParseExt(format)
@@ -103,7 +103,7 @@ func decodeImg(reader io.Reader, ext img.Ext) (image.Image, error) {
 		return vImage, err
 	}
 	if imgExt != ext {
-		return vImage, fmt.Errorf("unexpected image format %s", format)
+		return nil, fmt.Errorf("unexpected image format %s", format)
 	}
 
 	return vImage, err

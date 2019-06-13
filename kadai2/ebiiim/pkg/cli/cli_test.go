@@ -44,15 +44,15 @@ func TestParseArgs(t *testing.T) {
 			isErr:  false, isInvalidArgs: false},
 		{name: "usage",
 			args:   []string{"imgconv"},
-			parsed: &dirconv.DirConv{},
+			parsed: nil,
 			isErr:  true, isInvalidArgs: true},
 		{name: "no_dir",
 			args:   []string{"imgconv", "-source_ext=PNG", "-target_ext=.tiff"},
-			parsed: &dirconv.DirConv{},
+			parsed: nil,
 			isErr:  true, isInvalidArgs: true},
 		{name: "invalid_options",
 			args:   []string{"imgconv", "-source_ext=txt", "../testdata"},
-			parsed: &dirconv.DirConv{},
+			parsed: nil,
 			isErr:  true, isInvalidArgs: true},
 	}
 	for _, c := range cases {
@@ -63,7 +63,7 @@ func TestParseArgs(t *testing.T) {
 			t.Errorf("input %s, want %v(isErr) %v(isInvalidArgs), got %v", c.args, c.isErr, c.isInvalidArgs, err)
 		}
 		// verify DirConv
-		if !cmp.Equal(*dc, *c.parsed) {
+		if !cmp.Equal(dc, c.parsed) {
 			t.Errorf("input %s, want %v, got %v", c.args, c.parsed, dc)
 		}
 	}

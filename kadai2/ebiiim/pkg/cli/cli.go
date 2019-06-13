@@ -43,21 +43,21 @@ func ParseArgs(args []string) (*dirconv.DirConv, error) {
 	)
 	err := flags.Parse(args[1:])
 	if err != nil {
-		return &dirconv.DirConv{}, err
+		return nil, err
 	}
 
 	dir := flags.Arg(0) // get the first dir name only
 	if len(dir) == 0 {
-		return &dirconv.DirConv{}, &invalidArgsException{"no directory specified"}
+		return nil, &invalidArgsException{"no directory specified"}
 	}
 
 	srcExt, err := img.ParseExt(*argSrcExt)
 	if err != nil {
-		return &dirconv.DirConv{}, &invalidArgsException{"invalid source extension"}
+		return nil, &invalidArgsException{"invalid source extension"}
 	}
 	tgtExt, err := img.ParseExt(*argTgtExt)
 	if err != nil {
-		return &dirconv.DirConv{}, &invalidArgsException{"invalid target extension"}
+		return nil, &invalidArgsException{"invalid target extension"}
 	}
 
 	return &dirconv.DirConv{Dir: dir, SrcExt: srcExt, TgtExt: tgtExt}, nil
