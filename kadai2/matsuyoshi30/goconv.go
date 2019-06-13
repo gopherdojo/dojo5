@@ -47,11 +47,11 @@ func main() {
 
 	fromtype, err := conv.SelectFormat(from)
 	if err != nil {
-		logError(err, true)
+		fmt.Fprintf(os.Stderr, "%v", err)
 	}
 	totype, err := conv.SelectFormat(to)
 	if err != nil {
-		logError(err, true)
+		fmt.Fprintf(os.Stderr, "%v", err)
 	}
 	dirlist := opt.OptPath(flag.Args())
 
@@ -59,18 +59,12 @@ func main() {
 		fmt.Println(usage)
 	} else {
 		for _, d := range dirlist {
-			err := conv.Imgconv(fromtype, totype, d)
-			logError(err, false)
-		}
-	}
-}
-
-func logError(err []error, stop bool) {
-	for _, e := range err {
-		if e != nil {
-			log.Println(e)
-			if stop {
-				os.Exit(1)
+			res, err := conv.Imgconv(fromtype, totype, d)
+			for _, r := range res {
+				fmt.Println(r)
+			}
+			for _, e := range err {
+				log.Println(e)
 			}
 		}
 	}

@@ -22,7 +22,7 @@ const (
 )
 
 // Imgconv dirpath 配下にある、bf に指定されたフォーマットの画像を、af に指定されたフォーマットの画像に変換する
-func Imgconv(fromtype, totype ImageType, dirpath string) []error {
+func Imgconv(fromtype, totype ImageType, dirpath string) ([]string, []error) {
 	var errors []error
 	filelist := make([]string, 0)
 	err := filepath.Walk(dirpath, func(fp string, info os.FileInfo, err error) error {
@@ -40,43 +40,56 @@ func Imgconv(fromtype, totype ImageType, dirpath string) []error {
 	})
 	if err != nil {
 		errors = append(errors, err)
-		return errors
+		return nil, errors
 	}
 
 	return imgconv(fromtype, totype, filelist)
 }
 
 // imgconv filelist内の、bf に指定されたフォーマットの画像を、af に指定されたフォーマットの画像に変換する
-func imgconv(fromtype, totype ImageType, filelist []string) []error {
+func imgconv(fromtype, totype ImageType, filelist []string) ([]string, []error) {
 	var e []error
+	var result []string
+
+	reschan := make(chan string, 2)
+	errchan := make(chan error, 2)
 	wg := &sync.WaitGroup{}
 	for _, f := range filelist {
 		wg.Add(1)
 		go func(filename string) {
 			defer wg.Done()
 
-			fmt.Printf("INPUT: %s", filepath.Base(filename))
+			var s string
+
+			s = fmt.Sprintf("INPUT: %s", filepath.Base(filename))
 			img, err := decoder(filename, fromtype)
 			if err != nil {
-				e = append(e, err)
-				return
-			}
+				errchan <- err
+			} else {
+				dir, fn := filepath.Split(filename)
+				of := filepath.Base(fn[:len(fn)-len(filepath.Ext(fn))])
+				outfile := filepath.Join(dir, of)
 
-			dir, fn := filepath.Split(filename)
-			of := filepath.Base(fn[:len(fn)-len(filepath.Ext(fn))])
-			outfile := filepath.Join(dir, of)
-
-			err = encoder(img, outfile, totype)
-			if err != nil {
-				e = append(e, err)
-				return
+				err = encoder(img, outfile, totype)
+				if err != nil {
+					errchan <- err
+				} else {
+					s = fmt.Sprintf("%s => OUTPUT: %s.%s", s, of, totype)
+					reschan <- s
+				}
 			}
-			fmt.Printf(" => OUTPUT: %s.%s\n", of, totype)
 		}(f)
+
+		select {
+		case res := <-reschan:
+			result = append(result, res)
+		case err := <-errchan:
+			e = append(e, err)
+		}
 	}
 	wg.Wait()
 
-	return e
+	return result, e
 }
 
 // decoder filename というファイル（フォーマットが format ）をデコードして image.Image を返す

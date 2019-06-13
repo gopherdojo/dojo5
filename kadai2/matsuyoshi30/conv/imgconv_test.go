@@ -1,6 +1,7 @@
 package conv_test
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -51,7 +52,9 @@ func TestImgconv(t *testing.T) {
 
 func testImgconv_pass(t *testing.T, from conv.ImageType, to conv.ImageType, dir string, output string) {
 	t.Helper()
-	if err := conv.Imgconv(from, to, dir); err != nil {
+	res, err := conv.Imgconv(from, to, dir)
+	outputResult(res)
+	if err != nil {
 		t.Fatalf("DIR: %v (%v -> %v): %v", dir, from, to, err)
 	}
 
@@ -60,7 +63,17 @@ func testImgconv_pass(t *testing.T, from conv.ImageType, to conv.ImageType, dir 
 
 func testImgconv_fail(t *testing.T, from conv.ImageType, to conv.ImageType, dir string) {
 	t.Helper()
-	if err := conv.Imgconv(from, to, dir); err == nil {
+	res, err := conv.Imgconv(from, to, dir)
+	outputResult(res)
+	if err == nil {
 		t.Fatal("Expected error")
+	}
+}
+
+func outputResult(result []string) {
+	if result != nil {
+		for _, r := range result {
+			fmt.Println(r)
+		}
 	}
 }
