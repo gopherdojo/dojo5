@@ -55,8 +55,8 @@ func (dc *DirConv) Convert() ([]*Result, error) {
 	}
 
 	// convert files (goroutined)
-	// FIXME: data races
 	var wg sync.WaitGroup
+	var mu sync.Mutex
 	for i, v := range files {
 		wg.Add(1)
 		go func(idx int, val string) {
@@ -79,6 +79,8 @@ func (dc *DirConv) Convert() ([]*Result, error) {
 			}
 
 			// make a new Result and append it to the results list
+			mu.Lock()
+			defer mu.Unlock()
 			results = append(results, &Result{Index: idx, RelPath: val, Err: err})
 			if Logger != nil {
 				Logger.Printf("%s\n", logStr)
