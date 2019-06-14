@@ -48,16 +48,19 @@ func main() {
 		targets, err := target.Get(arg, *in)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
+			continue
 		}
 
 		for _, t := range targets {
 			img, err := imgconv.Decode(t)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
+				continue
 			}
 
 			if err = img.Encode(*out); err != nil {
 				fmt.Fprintln(os.Stderr, err)
+				continue
 			}
 		}
 	}
