@@ -1,6 +1,7 @@
-package converter
+package converter_test
 
 import (
+	"myConverter/converter"
 	"os"
 	"testing"
 )
@@ -44,7 +45,7 @@ func Test_Convert(t *testing.T) {
 	for _, c := range cases {
 		c := c
 		t.Run(c.testCase, func(t *testing.T) {
-			err := Convert(c.decodeFile, c.decodeType, c.encodeType)
+			err := converter.Convert(c.decodeFile, c.decodeType, c.encodeType)
 
 			if c.testDiv != "error" && err != nil {
 				t.Errorf(
