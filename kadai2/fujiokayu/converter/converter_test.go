@@ -1,6 +1,7 @@
 package converter_test
 
 import (
+	"fmt"
 	"myConverter/converter"
 	"os"
 	"testing"
@@ -11,15 +12,14 @@ func fileAssertionHelper(t *testing.T, testCase string, file string) {
 	// 変換後のファイルが存在するかチェック
 	info, err := os.Stat(file)
 	if err != nil {
-		t.Errorf("Case (%s) Failed test: File not generated",
-			testCase)
+		t.Fatal(fmt.Errorf("Case (%s) Failed test: File not generated",
+			testCase))
 	}
 	//　変換後のファイルサイズが0バイトではないかチェック
 	if info.Size() <= 0 {
-		t.Errorf("Case (%s) Failed test: Encoded file is invalid",
-			testCase)
+		t.Fatal(fmt.Errorf("Case (%s) Failed test: Encoded file is invalid",
+			testCase))
 	}
-
 }
 
 func Test_Convert(t *testing.T) {
