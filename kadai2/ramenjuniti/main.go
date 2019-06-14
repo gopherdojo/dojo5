@@ -2,7 +2,8 @@ package main
 
 import (
 	"flag"
-	"log"
+	"fmt"
+	"os"
 
 	"github.com/gopherdojo/dojo5/kadai2/ramenjuniti/imgconv"
 	"github.com/gopherdojo/dojo5/kadai2/ramenjuniti/target"
@@ -17,7 +18,8 @@ func main() {
 	args := flag.Args()
 
 	if len(args) == 0 {
-		log.Fatal("directory not specified")
+		fmt.Fprintln(os.Stderr, "directory not specified")
+		os.Exit(1)
 	}
 
 	if *in == "jpeg" {
@@ -34,26 +36,28 @@ func main() {
 	}
 
 	if !canConv(*in, formats) {
-		log.Fatalf("cannot convert %v file", *in)
+		fmt.Fprintf(os.Stderr, "cannot convert %v file", *in)
+		os.Exit(1)
 	}
 	if !canConv(*out, formats) {
-		log.Fatalf("cannot convert %v file", *out)
+		fmt.Fprintf(os.Stderr, "cannot convert %v file", *out)
+		os.Exit(1)
 	}
 
 	for _, arg := range args {
 		targets, err := target.Get(arg, *in)
 		if err != nil {
-			log.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 		}
 
 		for _, t := range targets {
 			img, err := imgconv.Decode(t)
 			if err != nil {
-				log.Println(err)
+				fmt.Fprintln(os.Stderr, err)
 			}
 
 			if err = img.Encode(*out); err != nil {
-				log.Println(err)
+				fmt.Fprintln(os.Stderr, err)
 			}
 		}
 	}
