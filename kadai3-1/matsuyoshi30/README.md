@@ -9,6 +9,10 @@ $ make build
 $ ./gotp [-lt limit time (sec)] [-wf source word file]
 ```
 
+#### demo
+
+![](./_resource/demo.gif)
+
 ##### Option
 
 | flag | Usage |
