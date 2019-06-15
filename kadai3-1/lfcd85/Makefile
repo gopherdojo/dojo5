@@ -1,4 +1,4 @@
-build: cmd/*.go typinggame/*.go
+build: cmd/*.go typinggame/*.go words/*.go
 	GO111MODULE=on go build -o bin/typinggame cmd/main.go
 
 fmt:
