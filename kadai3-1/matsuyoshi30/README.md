@@ -1,10 +1,8 @@
-## 課題3-1
-
-### Typing Game
+## 課題3-1: Typing Game
 
 Simple Typing Game written in Go.
 
-#### Usage
+### Usage
 
 ```
 $ make build
@@ -18,27 +16,28 @@ $ ./gotp [-lt limit time (sec)] [-wf source word file]
 | `-lt=20` | Set Limit Time (second) [default: 20] |
 | `-wf=default.txt` | Specify source word file [default: [default.txt](./default.txt)] |
 
-#### Test
+### Test
 
 ```
 $ make test
 ```
 
-#### Coverage
+### Coverage
 
 ```
 $ make cover
 ```
 
-#### Doc
+### Doc
 
 ```
 $ make doc
 ```
 
-#### TODO
+### TODO
 
-- main のテスト充実化
-- レベル選択（レベル別テキスト用意）
-- 正答率の高いキー、低いキーを表示
-- 日本語対応
+- [ ] main のテスト充実化
+- [ ] レベル選択（レベル別テキスト用意）
+- [ ] 正答率の高いキー、低いキーを表示
+- [ ] 日本語対応
+  - ```春はあけぼの（haruhaakebono）```
