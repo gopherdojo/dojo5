@@ -2,23 +2,25 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gopherdojo/dojo5/kadai3-1/lfcd85/typinggame"
+	"github.com/gopherdojo/dojo5/kadai3-1/lfcd85/words"
 )
 
 func main() {
-	// create words from input file (abstracted by io.Reader if possible)
+	path := "./testdata/go_standard_library.txt" // FIXME: move to options
+	words, err := words.Import(path)
+	if err != nil {
+		fmt.Println("error:", err)
+		return
+	}
+	g := typinggame.Game{
+		Words:     words,
+		TimeLimit: 30 * time.Second,
+	}
 
-	// start time counting by time.After or context.WithTimeout
-
-	// output word to stdout
-	// get one line from stdin
-	// judge whether two words are the same
-	// if so, add count of correct answers
-
-	// when time limit has come, show the count of correct answers
-
-	if err := typinggame.Execute(); err != nil {
+	if err := typinggame.Execute(g); err != nil {
 		fmt.Println("error:", err)
 		return
 	}
