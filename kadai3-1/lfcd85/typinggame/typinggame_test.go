@@ -10,7 +10,7 @@ import (
 func TestExecute(t *testing.T) {
 	g := typinggame.Game{
 		typinggame.Words{"hoge", "fuga", "piyo"},
-		30 * time.Second,
+		1 * time.Second,
 	}
 
 	if err := typinggame.Execute(g); err != nil {
