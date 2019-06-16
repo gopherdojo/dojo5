@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gopherdojo/dojo5/kadai1/manhdaovan/pkg/imgconv"
+	"github.com/gopherdojo/dojo5/kadai2/manhdaovan/pkg/imgconv"
 )
 
 const (
@@ -16,27 +16,28 @@ const (
 func main() {
 	ca := parseArgs()
 	if err := ca.validate(); err != nil {
-		fmt.Printf("error: %v\n", err)
+		fmt.Fprintln(os.Stderr, "error: %v\n", err)
 		printHelp()
 		os.Exit(exitFailure)
 	}
 
 	if ca.srcImgType == ca.destImgType {
-		fmt.Println("source and destination image type are the same. Nothing to to.")
+		fmt.Fprintln(os.Stderr, "source and destination image type are the same. Nothing to to.")
 		printHelp()
-		os.Exit(exitSuccess)
+		os.Exit(exitFailure)
 	}
 
 	conv, err := initConverter(ca)
 	if err != nil {
-		fmt.Printf("error: %v\n", err)
+		fmt.Fprintln(os.Stderr, "error: %v\n", err)
 		printHelp()
 		os.Exit(exitFailure)
 	}
 
 	if err := conv.Convert(ca.path, imgconv.ImgType(ca.srcImgType)); err != nil {
-		fmt.Println("error: ", err)
+		fmt.Fprintln(os.Stderr, "error: ", err)
 		printHelp()
+		os.Exit(exitFailure)
 	}
 }
 
@@ -44,6 +45,7 @@ func initConverter(ca *cliArguments) (*imgconv.Converter, error) {
 	var decoder imgconv.Decoder
 	var encoder imgconv.Encoder
 	var destImgExt imgconv.ImgExt
+	var picker imgconv.DefaultImgPicker
 
 	switch ca.srcImgType {
 	case string(imgconv.ImgTypeGIF):
@@ -73,7 +75,7 @@ func initConverter(ca *cliArguments) (*imgconv.Converter, error) {
 	return &imgconv.Converter{
 		Enc:        encoder,
 		Dec:        decoder,
-		Picker:     imgconv.DefaultImgPicker{},
+		Picker:     picker,
 		DestImgExt: destImgExt,
 		SkipErr:    ca.skipErr,
 		KeepSrcImg: ca.keepSrcImg,

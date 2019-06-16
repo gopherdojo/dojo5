@@ -242,16 +242,10 @@ func TestConverter_ConvertDir(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := copyTestFilesToDir(orgFiles, testDirs); err != nil {
-				t.Errorf("error on copy test files to: %v, err: %+v", testDirs, err)
-				return
-			}
-
+			copyTestFilesToDir(t, orgFiles, testDirs)
 			defer func() {
 				// clean all files in test dirs after each test
-				if err := deleteAllFiles(testDirs); err != nil {
-					t.Errorf("error on cleaning files in: %v, err: %+v", testDirs, err)
-				}
+				deleteAllFiles(t, testDirs)
 			}()
 
 			conv := Converter{
@@ -269,19 +263,13 @@ func TestConverter_ConvertDir(t *testing.T) {
 			}
 
 			// ensure about files not be converted are unaffected
-			if err := verifyFiles(noAffectedFiles, true); err != nil {
-				t.Errorf("file not existed after test: %+v", err)
-			}
+			verifyFiles(t, noAffectedFiles, true)
 
 			// ensure about files were deleted after converted
-			if err := verifyFiles(tt.wantDeletedImgs, false); err != nil {
-				t.Errorf("file not deleted after test: %+v", err)
-			}
+			verifyFiles(t, tt.wantDeletedImgs, false)
 
 			// ensure new images were added after converted
-			if err := verifyImgs(tt.wantConvertedImgs, tt.expectImgType); err != nil {
-				t.Errorf("img not correct after test, err: %+v", err)
-			}
+			verifyImgs(t, tt.wantConvertedImgs, tt.expectImgType)
 		})
 	}
 }
@@ -398,16 +386,10 @@ func TestConverter_ConvertImg(t *testing.T) {
 	testDirs := paths{rootForTestDir}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := copyTestFilesToDir(orgFiles, testDirs); err != nil {
-				t.Errorf("error on copy test files to: %v, err: %+v", testDirs, err)
-				return
-			}
-
+			copyTestFilesToDir(t, orgFiles, testDirs)
 			defer func() {
 				// clean all files in test dirs after each test
-				if err := deleteAllFiles(testDirs); err != nil {
-					t.Errorf("error on cleaning files in: %v, err: %+v", testDirs, err)
-				}
+				deleteAllFiles(t, testDirs)
 			}()
 
 			conv := &Converter{
@@ -425,13 +407,9 @@ func TestConverter_ConvertImg(t *testing.T) {
 			}
 
 			// ensure about files were deleted after converted
-			if err := verifyFiles(tt.wantDeletedImgs, false); err != nil {
-				t.Errorf("file not deleted after test: %+v", err)
-			}
+			verifyFiles(t, tt.wantDeletedImgs, false)
 			// ensure new images were added after converted
-			if err := verifyImgs(tt.wantConvertedImgs, tt.expectImgType); err != nil {
-				t.Errorf("img not correct after test, err: %+v", err)
-			}
+			verifyImgs(t, tt.wantConvertedImgs, tt.expectImgType)
 		})
 	}
 }

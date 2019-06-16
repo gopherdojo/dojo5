@@ -18,16 +18,16 @@ type JPEGDecoder struct{}
 type GIFDecoder struct{}
 
 // Decode is a wrapper of png.Decode method
-func (pd PNGDecoder) Decode(r io.Reader) (pkgimg.Image, error) {
+func (PNGDecoder) Decode(r io.Reader) (pkgimg.Image, error) {
 	return png.Decode(r)
 }
 
 // Decode is a wrapper of jpeg.Decode method
-func (jd JPEGDecoder) Decode(r io.Reader) (pkgimg.Image, error) {
+func (JPEGDecoder) Decode(r io.Reader) (pkgimg.Image, error) {
 	return jpeg.Decode(r)
 }
 
 // Decode is a wrapper of gif.Decode method
-func (gd GIFDecoder) Decode(r io.Reader) (pkgimg.Image, error) {
+func (GIFDecoder) Decode(r io.Reader) (pkgimg.Image, error) {
 	return gif.Decode(r)
 }

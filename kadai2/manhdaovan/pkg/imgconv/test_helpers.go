@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"testing"
 )
 
 // this file contains variables, methods that would be shared between tests
@@ -36,22 +37,24 @@ type paths []string
 
 // verifyImgs verifies that images are existing or not,
 // and corresponding to it type
-func verifyImgs(imgs paths, imgType ImgType) error {
+func verifyImgs(t *testing.T, imgs paths, imgType ImgType) {
+	t.Helper()
+
 	for _, img := range imgs {
 		ok, err := isImgWithType(img, imgType)
 		if err != nil {
-			return err
+			t.Error(err)
 		}
 		if !ok {
-			return fmt.Errorf("converted image type is wrong, img: %s, expect type: %s", img, imgType)
+			t.Errorf("converted image type is wrong, img: %s, expect type: %s", img, imgType)
 		}
 	}
-
-	return nil
 }
 
 // verifyFiles verifies files are existing or not
-func verifyFiles(files paths, checkExisting bool) error {
+func verifyFiles(t *testing.T, files paths, checkExisting bool) {
+	t.Helper()
+
 	for _, f := range files {
 		file, err := os.Open(f)
 		defer file.Close()
@@ -60,39 +63,35 @@ func verifyFiles(files paths, checkExisting bool) error {
 			if err == nil {
 				continue
 			}
-			return fmt.Errorf("need file %v existing, got err: %+v", f, err)
+			t.Errorf("need file %v existing, got err: %+v", f, err)
 		case false:
 			if os.IsNotExist(err) {
 				continue
 			}
-			return fmt.Errorf("need file %v removed, got err: %v", f, err)
+			t.Errorf("need file %v removed, got err: %v", f, err)
 		}
 	}
-
-	return nil
 }
 
-func copyTestFilesToDir(files paths, dirs paths) error {
+func copyTestFilesToDir(t *testing.T, files paths, dirs paths) {
 	for _, dir := range dirs {
 		for _, f := range files {
 			srcFile, err := ioutil.ReadFile(f)
 			if err != nil {
-				return err
+				t.Error(err)
 			}
 
 			fileNameIdx := strings.LastIndex(f, "/")
 			destPath := dir + string(f[fileNameIdx:])
 			err = ioutil.WriteFile(destPath, srcFile, 0644)
 			if err != nil {
-				return err
+				t.Error(err)
 			}
 		}
 	}
-
-	return nil
 }
 
-func deleteAllFiles(dirs paths) error {
+func deleteAllFiles(t *testing.T, dirs paths) {
 	for _, dir := range dirs {
 		outerErr := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -107,11 +106,9 @@ func deleteAllFiles(dirs paths) error {
 		})
 
 		if outerErr != nil {
-			return outerErr
+			t.Error(outerErr)
 		}
 	}
-
-	return nil
 }
 
 // isSameFiles returns `files1` is same with `files2` in unordered,
@@ -133,7 +130,7 @@ func isSameFiles(files1, files2 paths) bool {
 	}
 
 	for _, f2 := range files2 {
-		if checkedFiles[f2] {
+		if checked, found := checkedFiles[f2]; checked || !found {
 			return false // file already checked
 		}
 		checkedFiles[f2] = true
@@ -149,6 +146,6 @@ func isSameFiles(files1, files2 paths) bool {
 
 type errDecoder struct{}
 
-func (ed errDecoder) Decode(r io.Reader) (pkgimg.Image, error) {
+func (errDecoder) Decode(r io.Reader) (pkgimg.Image, error) {
 	return nil, fmt.Errorf("error on errDecoder.Decode")
 }

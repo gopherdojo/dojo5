@@ -55,14 +55,10 @@ func TestDefaultImgPicker_Pick(t *testing.T) {
 	testDirs := paths{rootForTestDir, subDir}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := copyTestFilesToDir(orgFiles, testDirs); err != nil {
-				t.Errorf("error on copy files for test: %+v", err)
-			}
+			copyTestFilesToDir(t, orgFiles, testDirs)
 			defer func() {
 				// clean all files in test dirs after each test
-				if err := deleteAllFiles(testDirs); err != nil {
-					t.Errorf("error on cleaning files in: %v, err: %+v", testDirs, err)
-				}
+				deleteAllFiles(t, testDirs)
 			}()
 
 			dp := DefaultImgPicker{}
@@ -126,16 +122,10 @@ func Test_isImgWithType(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := copyTestFilesToDir(orgFiles, paths{rootForTestDir}); err != nil {
-				t.Errorf("error on copy test files to test root dirs: %+v", err)
-				return
-			}
-
+			copyTestFilesToDir(t, orgFiles, paths{rootForTestDir})
 			defer func() {
 				// clean all files in test dirs after each test
-				if err := deleteAllFiles(paths{rootForTestDir}); err != nil {
-					t.Errorf("error on cleaning files in test root dir: %+v", err)
-				}
+				deleteAllFiles(t, paths{rootForTestDir})
 			}()
 
 			got, err := isImgWithType(tt.args.path, tt.args.imgType)

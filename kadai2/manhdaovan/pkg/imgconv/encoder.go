@@ -18,16 +18,16 @@ type JPEGEncoder struct{}
 type GIFEncoder struct{}
 
 // Encode is a wrapper of png.Encode method
-func (pe PNGEncoder) Encode(w io.Writer, m pkgimg.Image) error {
+func (PNGEncoder) Encode(w io.Writer, m pkgimg.Image) error {
 	return png.Encode(w, m)
 }
 
 // Encode is a wrapper of jpeg.Encode method
-func (je JPEGEncoder) Encode(w io.Writer, m pkgimg.Image) error {
+func (JPEGEncoder) Encode(w io.Writer, m pkgimg.Image) error {
 	return jpeg.Encode(w, m, nil)
 }
 
 // Encode is a wrapper of gif.Encode method
-func (ge GIFEncoder) Encode(w io.Writer, m pkgimg.Image) error {
+func (GIFEncoder) Encode(w io.Writer, m pkgimg.Image) error {
 	return gif.Encode(w, m, nil)
 }
