@@ -70,3 +70,7 @@ io.WriteString()のような関数がある。これらはbyteのsliceを使わ�
 ## 参考
 Goならわかるシステムプログラミング, 渋川よしき, LambdaNote, 2017
 [How to use the io.Writer interface · YourBasic Go](https://yourbasic.org/golang/io-writer-interface-explained/)
+
+## テストカバレッジ
+- conv: 71.4%
+- dir: 91.7%

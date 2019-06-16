@@ -88,10 +88,4 @@ func (i *ImageData) Convert(ext string) error {
 	}
 	return nil
 
-	//// remove old file -> helper
-	// if err := os.Remove(i.Path); err != nil {
-	// 	return err
-	// }
-
-	return nil
 }

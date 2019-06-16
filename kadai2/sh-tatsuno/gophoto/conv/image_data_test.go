@@ -4,21 +4,23 @@ import (
 	"image/jpeg"
 	"image/png"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
 func Test_ImageData(t *testing.T) {
+	t.Helper()
 	t.Run("OK: .png -> .jpeg", func(t *testing.T) {
 
 		// ### Given ###
-		img, err := NewImageData("./testdata/lena.jpeg")
+		img, err := NewImageData("./testdata/lena-png.png")
 		if err != nil {
 			t.Fatalf("Cannot load file. err: %v", err)
 		}
 
 		// ### When ###
 		path := "./testdata/lena-png.jpeg"
-		if err = img.Save(path); err != nil {
+		if err = img.Convert(filepath.Ext(path)); err != nil {
 			t.Fatalf("Cannot save file. err: %v", err)
 		}
 
@@ -39,14 +41,14 @@ func Test_ImageData(t *testing.T) {
 	t.Run("OK: .jpeg -> .png", func(t *testing.T) {
 
 		// ### Given ###
-		img, err := NewImageData("./testdata/lena.png")
+		img, err := NewImageData("./testdata/lena-jpeg.jpeg")
 		if err != nil {
 			t.Fatalf("Cannot load file. err: %v", err)
 		}
 
 		// ### When ###
 		path := "./testdata/lena-jpeg.png"
-		if err = img.Save(path); err != nil {
+		if err = img.Convert(filepath.Ext(path)); err != nil {
 			t.Fatalf("Cannot save file. err: %v", err)
 		}
 

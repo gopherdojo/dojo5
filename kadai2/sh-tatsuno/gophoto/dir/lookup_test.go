@@ -6,54 +6,33 @@ import (
 )
 
 func Test_Lookup(t *testing.T) {
+	t.Helper()
 
-	t.Run("OK: .jpg", func(t *testing.T) {
-		actual := []string{}
-		// ### Given ###
-		actual, err := Lookup("./testdata", ".jpg", actual)
-		if err != nil {
-			t.Fatalf("Failed test. err: %v", err)
-		}
+	lookupOKTests := []struct {
+		testCase string
+		ext      string
+		expected []string
+	}{
+		{"OK: .jpg", ".jpg", []string{"testdata/test1.jpg", "testdata/test3/test4.jpg", "testdata/test3/test5.jpg"}},
+		{"OK: .png", ".png", []string{"testdata/test2.png", "testdata/test3/test6.png"}},
+		{"OK: .gif", ".gif", []string{}},
+	}
+	for _, test := range lookupOKTests {
 
-		expected := []string{"testdata/test1.jpg", "testdata/test3/test4.jpg", "testdata/test3/test5.jpg"}
+		t.Run(test.testCase, func(t *testing.T) {
+			actual := []string{}
+			// ### Given ###
+			actual, err := Lookup("./testdata", test.ext, actual)
+			if err != nil {
+				t.Fatalf("Failed test. err: %v", err)
+			}
 
-		// ### Then ###
-		if !reflect.DeepEqual(actual, expected) {
-			t.Fatalf("Failed test. expected: %v,\n but actual: %v", expected, actual)
-		}
-	})
-
-	t.Run("OK: .png", func(t *testing.T) {
-		actual := []string{}
-		// ### Given ###
-		actual, err := Lookup("./testdata", ".png", actual)
-		if err != nil {
-			t.Fatalf("Failed test. err: %v", err)
-		}
-
-		expected := []string{"testdata/test2.png", "testdata/test3/test6.png"}
-
-		// ### Then ###
-		if !reflect.DeepEqual(actual, expected) {
-			t.Fatalf("Failed test. expected: %v,\n but actual: %v", expected, actual)
-		}
-	})
-
-	t.Run("OK: .gif(empty)", func(t *testing.T) {
-		actual := []string{}
-		// ### Given ###
-		actual, err := Lookup("./testdata", ".gif", actual)
-		if err != nil {
-			t.Fatalf("Failed test. err: %v", err)
-		}
-
-		expected := []string{}
-
-		// ### Then ###
-		if !reflect.DeepEqual(actual, expected) {
-			t.Fatalf("Failed test. expected: %v,\n but actual: %v", expected, actual)
-		}
-	})
+			// ### Then ###
+			if !reflect.DeepEqual(actual, test.expected) {
+				t.Fatalf("Failed test. expected: %v,\n but actual: %v", test.expected, actual)
+			}
+		})
+	}
 
 	t.Run("NG: not found directory", func(t *testing.T) {
 		actual := []string{}
