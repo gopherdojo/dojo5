@@ -18,12 +18,11 @@ type Game struct {
 }
 
 func Execute(g Game) error {
-	g.run(os.Stdin, os.Stdout)
+	g.run(inputChannel(os.Stdin), os.Stdout)
 	return nil
 }
 
-func (g *Game) run(r io.Reader, w io.Writer) {
-	ch := input(r)
+func (g *Game) run(ch <-chan string, w io.Writer) {
 	bc := context.Background()
 	ctx, cancel := context.WithTimeout(bc, g.TimeLimit)
 	defer cancel()
@@ -40,10 +39,10 @@ LOOP:
 		case input := <-ch:
 			if input == word {
 				score++
-				fmt.Fprintln(w, "ok! current score:", score)
+				fmt.Fprintln(w, input, "... OK! current score:", score)
 				word = g.Words[rand.Intn(len(g.Words))]
 			} else {
-				fmt.Fprintln(w, "ng")
+				fmt.Fprintln(w, input, "... NG: try again.")
 			}
 		case <-ctx.Done():
 			fmt.Fprintln(w)
@@ -53,7 +52,7 @@ LOOP:
 	}
 }
 
-func input(r io.Reader) <-chan string {
+func inputChannel(r io.Reader) <-chan string {
 	ch := make(chan string)
 
 	go func() {
