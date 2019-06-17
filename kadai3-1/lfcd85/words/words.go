@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 )
 
+// Import reads the text file and returns the words for the typing game.
 func Import(path string) (typinggame.Words, error) {
 	var words typinggame.Words
 	var result error

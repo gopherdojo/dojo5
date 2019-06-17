@@ -10,13 +10,16 @@ import (
 	"time"
 )
 
+// Words stores a slice of words which is used for the game.
 type Words []string
 
+// Game struct holds the words and the time limits of the game.
 type Game struct {
 	Words     Words
 	TimeLimit time.Duration
 }
 
+// Execute starts the game using standard input and output.
 func Execute(g Game) error {
 	g.run(inputChannel(os.Stdin), os.Stdout)
 	return nil
