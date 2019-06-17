@@ -9,8 +9,9 @@ import (
 	"github.com/gopherdojo/dojo5/kadai3-1/lfcd85/words"
 )
 
+const path = "./testdata/go_standard_library.txt"
+
 func main() {
-	path := "./testdata/go_standard_library.txt" // FIXME: move to options
 	timeLimit := flag.Int("t", 30, "Time limit of the game (secs)")
 	flag.Parse()
 
