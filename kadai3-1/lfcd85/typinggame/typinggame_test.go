@@ -9,11 +9,15 @@ import (
 	"github.com/gopherdojo/dojo5/kadai3-1/lfcd85/typinggame"
 )
 
-func TestExecute(t *testing.T) {
-	g := typinggame.Game{
+func initGame() typinggame.Game {
+	return typinggame.Game{
 		typinggame.Words{"hoge"},
 		1 * time.Second,
 	}
+}
+
+func TestExecute(t *testing.T) {
+	g := initGame()
 
 	if err := typinggame.Execute(g); err != nil {
 		t.Errorf("failed to execute new game: %v", err)
@@ -21,10 +25,7 @@ func TestExecute(t *testing.T) {
 }
 
 func TestGame_run(t *testing.T) {
-	g := typinggame.Game{
-		typinggame.Words{"hoge"},
-		1 * time.Second,
-	}
+	g := initGame()
 
 	ch := make(chan string)
 	go func() {
