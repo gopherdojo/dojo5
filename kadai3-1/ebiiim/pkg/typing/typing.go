@@ -8,6 +8,7 @@ import (
 	"github.com/gopherdojo/dojo5/kadai3-1/ebiiim/pkg/timer"
 )
 
+// Game struct holds channels and lists for the typing game.
 type Game struct {
 	// receive the next quiz
 	QuizChannel <-chan quiz.Quiz
@@ -22,11 +23,15 @@ type Game struct {
 	timeSec    int
 }
 
+// Grade struct holds the result of the typing game.
 type Grade struct {
+	// the number of correctly answered words per a minute
 	WordsPerMinute float64
-	CorrectRate    float64
+	// percentage of correct answers (0.0 -- 1.0)
+	CorrectRate float64
 }
 
+// NewTypingGame initializes Game.
 func NewTypingGame(ctx context.Context, nextQuizCh <-chan interface{}, quizLoader quiz.Loader, reader io.Reader, timeSec int) *Game {
 	g := &Game{timeSec: timeSec}
 	g.QuizChannel = quiz.MakeQuizChannel(ctx, nextQuizCh, quizLoader)
@@ -35,6 +40,7 @@ func NewTypingGame(ctx context.Context, nextQuizCh <-chan interface{}, quizLoade
 	return g
 }
 
+// CalcGrade calculates the current score and returns Grade.
 func (g *Game) CalcGrade() *Grade {
 	numCorrects := float64(g.countCorrectAnswers())
 	numMinutes := float64(g.timeSec) / 60.0

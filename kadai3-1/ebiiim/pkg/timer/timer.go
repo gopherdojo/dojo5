@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// MakeChannel returns a read-only channel that closes after given seconds.
 func MakeChannel(sec int) <-chan interface{} {
 	timer := make(chan interface{})
 	go func() {
