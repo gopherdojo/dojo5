@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 
@@ -13,6 +14,7 @@ func main() {
 	var color bool
 	flag.IntVar(&timeout, "t", game.DefaultOptions.TimeUpSecond, "Timeout Seconds")
 	flag.BoolVar(&color, "c", game.DefaultOptions.IsColor, "Print Color")
+	flag.Usage = usage
 	flag.Parse()
 
 	g, err := game.New(game.Options{
@@ -25,4 +27,14 @@ func main() {
 	}
 
 	os.Exit(g.Start())
+}
+
+func usage() {
+	fmt.Fprintf(os.Stderr, `
+tgame is a Typing Game
+Usage:
+  tgame [option]
+Options:
+`)
+	flag.PrintDefaults()
 }
