@@ -12,15 +12,13 @@ func main() {
 	game := typinggame.TypingGame{
 		Duration: ca.duration,
 	}
-	done := game.Start()
-	select {
-	case reason := <-done:
-		correct := game.CorrectSentences()
-		fmt.Println("\n")
-		fmt.Println(reason)
-		fmt.Println("\n ----- Result ----- ")
-		fmt.Println("correct %d sentences", correct)
-	}
+
+	doneReason := <-game.Start()
+	correct := game.CorrectSentences()
+	fmt.Println("\n")
+	fmt.Println(doneReason)
+	fmt.Println("\n ----- Result ----- ")
+	fmt.Println("correct %d sentences", correct)
 }
 
 type cliArgs struct {
