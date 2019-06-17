@@ -3,6 +3,7 @@ package quiz
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"io"
 	"math/rand"
 	"time"
@@ -67,20 +68,22 @@ func (l *DummyLoader) Next() Quiz {
 	return Quiz{Timestamp: time.Now(), Text: "abc", Answers: []string{"abc"}}
 }
 
-type CSVLoader struct {
+type JSONLoader struct {
 	QuizList []Quiz
 	random   *rand.Rand
 }
 
-func (l *CSVLoader) Next() Quiz {
+func (l *JSONLoader) Next() Quiz {
 	n := len(l.QuizList)
-	return l.QuizList[l.random.Intn(n)]
-
+	q := l.QuizList[l.random.Intn(n)]
+	q.Timestamp = time.Now()
+	return q
 }
 
-func NewCSVLoader(path string, randSeed int64) (*CSVLoader, error) {
-	l := &CSVLoader{}
+func NewJSONLoader(reader io.Reader, randSeed int64) (*JSONLoader, error) {
+	l := &JSONLoader{}
 	l.random = rand.New(rand.NewSource(randSeed))
-	// TODO: load csv
+	jsonDecoder := json.NewDecoder(reader)
+	jsonDecoder.Decode(&l.QuizList)
 	return l, nil
 }

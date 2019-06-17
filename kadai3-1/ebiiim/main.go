@@ -7,6 +7,7 @@ import (
 
 	"github.com/gopherdojo/dojo5/kadai3-1/ebiiim/pkg/quiz"
 	"github.com/gopherdojo/dojo5/kadai3-1/ebiiim/pkg/typing"
+	"github.com/pkg/errors"
 )
 
 func main() {
@@ -14,12 +15,22 @@ func main() {
 	ctx, cancel := context.WithCancel(bc)
 	defer cancel()
 	nextQuizCh := make(chan interface{})
-	quizLoader := &quiz.DummyLoader{}
-	//quizLoader, err := quiz.NewCSVLoader("abc.csv", 1)
-	//if err != nil {
-	//	fmt.Fprint(os.Stderr, "failed to load quiz file", err)
-	//	os.Exit(1)
-	//}
+
+	// load quiz
+	// quizLoader := &quiz.DummyLoader{}
+	reader, err := os.Open("pkg/testdata/quiz.json")
+	if err != nil {
+		err = errors.Wrap(err, "failed to open file")
+		fmt.Fprint(os.Stderr, err)
+		os.Exit(1)
+	}
+	quizLoader, err := quiz.NewJSONLoader(reader, 1)
+	if err != nil {
+		err = errors.Wrap(err, "failed to generate JSONLoader")
+		fmt.Fprint(os.Stderr, err)
+		os.Exit(1)
+	}
+
 	tg := typing.NewTypingGame(ctx, nextQuizCh, quizLoader, os.Stdin, 5)
 
 	// request the first quiz

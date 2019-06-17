@@ -1,0 +1,13 @@
+[{
+	"text": "hello",
+	"answers": ["hello"]
+}, {
+	"text": "world",
+	"answers": ["world"]
+}, {
+	"text": "golang",
+	"answers": ["golang"]
+}, {
+	"text": "こんにちは",
+	"answers": ["こんにちは"]
+}]
