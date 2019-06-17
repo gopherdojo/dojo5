@@ -46,10 +46,18 @@ func (g *Game) CalcGrade() *Grade {
 
 func (g *Game) countCorrectAnswers() (c int) {
 	for idx, ans := range g.AnswerList {
-		// TODO: check ans.Text in Quiz.Answers
-		if ans.Text == g.QuizList[idx].Answers[0] {
+		if isContain(g.QuizList[idx].Answers, ans.Text) {
 			c++
 		}
 	}
 	return
+}
+
+func isContain(ss []string, s string) bool {
+	for _, e := range ss {
+		if s == e {
+			return true
+		}
+	}
+	return false
 }
