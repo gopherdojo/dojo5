@@ -46,7 +46,7 @@ LOOP:
 			}
 		case <-ctx.Done():
 			fmt.Fprintln(w)
-			fmt.Fprintln(w, g.TimeLimit, "has passed: you correctly typed", score, "packages!")
+			fmt.Fprintln(w, g.TimeLimit, "has passed: you correctly typed", score, "package(s)!")
 			break LOOP
 		}
 	}

@@ -21,6 +21,11 @@ func TestExecute(t *testing.T) {
 }
 
 func TestGame_run(t *testing.T) {
+	g := typinggame.Game{
+		typinggame.Words{"hoge"},
+		1 * time.Second,
+	}
+
 	ch := make(chan string)
 	go func() {
 		time.Sleep(100 * time.Millisecond)
@@ -28,11 +33,6 @@ func TestGame_run(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 		ch <- "hoge"
 	}()
-
-	g := typinggame.Game{
-		typinggame.Words{"hoge"},
-		1 * time.Second,
-	}
 
 	var output bytes.Buffer
 	typinggame.ExportGameRun(&g, ch, &output)
@@ -45,6 +45,7 @@ func TestGame_run(t *testing.T) {
 		{"hoga ... OK", false},
 		{"hoge ... OK", true},
 		{"hoge ... NG", false},
+		{"you correctly typed 1 package", true},
 	}
 
 	for _, c := range cases {
