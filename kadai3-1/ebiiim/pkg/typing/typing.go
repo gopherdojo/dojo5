@@ -25,6 +25,12 @@ type Game struct {
 
 // Grade struct holds the result of the typing game.
 type Grade struct {
+	// total time (sec)
+	TotalTime int
+	// number of answered quizzes
+	Answered int
+	// number of correct answers
+	Corrects int
 	// the number of correctly answered words per a minute
 	WordsPerMinute float64
 	// percentage of correct answers (0.0 -- 1.0)
@@ -42,11 +48,13 @@ func NewTypingGame(ctx context.Context, nextQuizCh <-chan interface{}, quizLoade
 
 // CalcGrade calculates the current score and returns Grade.
 func (g *Game) CalcGrade() *Grade {
-	numCorrects := float64(g.countCorrectAnswers())
-	numMinutes := float64(g.timeSec) / 60.0
-	cr := numCorrects / float64(len(g.AnswerList))
-	wpm := numCorrects / numMinutes
-	gr := &Grade{WordsPerMinute: wpm, CorrectRate: cr}
+	totalSec := g.timeSec
+	answered := len(g.AnswerList)
+	numCorrects := g.countCorrectAnswers()
+	numMinutes := float64(totalSec) / 60.0
+	wpm := float64(numCorrects) / float64(numMinutes)
+	cr := float64(numCorrects) / float64(answered)
+	gr := &Grade{TotalTime: totalSec, Answered: answered, Corrects: numCorrects, WordsPerMinute: wpm, CorrectRate: cr}
 	return gr
 }
 

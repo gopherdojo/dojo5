@@ -52,5 +52,5 @@ QuizLoop:
 
 	// show the result
 	grade := tg.CalcGrade()
-	fmt.Fprintf(os.Stdout, "WordsPerMinute: %.2f\nCorrectRate: %.2f\n", grade.WordsPerMinute, grade.CorrectRate)
+	fmt.Fprintf(os.Stdout, "\nTotal Time: %d sec.\nAnswered: %d\nCorrects: %d\nCorrect Rate: %.0f%%\nWPM: %.0f\n", grade.TotalTime, grade.Answered, grade.Corrects, 100*grade.CorrectRate, grade.WordsPerMinute)
 }
