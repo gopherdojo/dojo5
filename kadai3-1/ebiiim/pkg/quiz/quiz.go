@@ -100,5 +100,11 @@ func NewJSONLoader(reader io.Reader, randSeed int64) (*JSONLoader, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to decode json")
 	}
+	// check loaded data
+	for _, q := range l.QuizList {
+		if q.Text == "" || q.Answers == nil || len(q.Answers) == 0 {
+			return nil, errors.New("invalid quiz")
+		}
+	}
 	return l, nil
 }
