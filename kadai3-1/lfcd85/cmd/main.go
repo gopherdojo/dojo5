@@ -12,7 +12,7 @@ import (
 const path = "./testdata/go_standard_library.txt"
 
 func main() {
-	timeLimit := flag.Int("t", 30, "Time limit of the game (secs)")
+	timeLimit := flag.Int("t", 30, "Time limit of the game (sec)")
 	flag.Parse()
 
 	words, err := words.Import(path)

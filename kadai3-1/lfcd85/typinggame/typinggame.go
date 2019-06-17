@@ -27,7 +27,7 @@ func (g *Game) run(ch <-chan string, w io.Writer) {
 	ctx, cancel := context.WithTimeout(bc, g.TimeLimit)
 	defer cancel()
 
-	fmt.Fprintln(w, "Let's type the standard package names! (Time limit:", g.TimeLimit, ")")
+	fmt.Fprintln(w, "Let's type the standard package names! ( Time limit:", g.TimeLimit, ")")
 
 	var score int
 	rand.Seed(time.Now().UnixNano())
