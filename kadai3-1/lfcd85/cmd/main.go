@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"time"
 
@@ -10,6 +11,9 @@ import (
 
 func main() {
 	path := "./testdata/go_standard_library.txt" // FIXME: move to options
+	timeLimit := flag.Int("t", 30, "Time limit of the game (secs)")
+	flag.Parse()
+
 	words, err := words.Import(path)
 	if err != nil {
 		fmt.Println("error:", err)
@@ -17,7 +21,7 @@ func main() {
 	}
 	g := typinggame.Game{
 		Words:     words,
-		TimeLimit: 30 * time.Second,
+		TimeLimit: time.Duration(*timeLimit) * time.Second,
 	}
 
 	if err := typinggame.Execute(g); err != nil {
