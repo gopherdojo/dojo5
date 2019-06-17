@@ -7,6 +7,8 @@ import (
 	"io"
 	"math/rand"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 // FIXME: inputCh does not close because scanner.Scan() is blocking.
@@ -84,6 +86,9 @@ func NewJSONLoader(reader io.Reader, randSeed int64) (*JSONLoader, error) {
 	l := &JSONLoader{}
 	l.random = rand.New(rand.NewSource(randSeed))
 	jsonDecoder := json.NewDecoder(reader)
-	jsonDecoder.Decode(&l.QuizList)
+	err := jsonDecoder.Decode(&l.QuizList)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to decode json")
+	}
 	return l, nil
 }
