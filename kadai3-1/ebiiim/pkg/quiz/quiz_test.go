@@ -1,22 +1,72 @@
 package quiz_test
 
 import (
+	"context"
 	"io"
 	"os"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/gopherdojo/dojo5/kadai3-1/ebiiim/pkg/quiz"
 )
 
 //func TestMakeAnswerChannel(t *testing.T) {
 //
 //}
-//
-//func TestMakeQuizChannel(t *testing.T) {
-//
-//}
+
+func TestMakeQuizChannel(t *testing.T) {
+	var (
+		loader1   = &quiz.DummyLoader{}
+		dummyQuiz = quiz.Quiz{Text: "abc", Answers: []string{"abc"}}
+	)
+	cases := []struct {
+		name   string
+		loader quiz.Loader
+		want1  quiz.Quiz
+		want2  quiz.Quiz
+	}{
+		{name: "normal", loader: loader1, want1: dummyQuiz, want2: dummyQuiz},
+	}
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := context.WithCancel(context.Background())
+			nextQuizCh := make(chan interface{})
+			quizCh := quiz.MakeQuizChannel(ctx, nextQuizCh, c.loader)
+
+			// get the 1st quiz
+			nextQuizCh <- struct{}{}
+			q, ok := <-quizCh
+			if !ok {
+				t.Error("invalid channel status")
+			}
+			if !cmp.Equal(q, c.want1, cmpopts.IgnoreFields(q, "Timestamp")) {
+				t.Errorf("invalid answers: want %v got %v", c.want1, q)
+			}
+
+			// get the 2nd quiz
+			nextQuizCh <- struct{}{}
+			q, ok = <-quizCh
+			if !ok {
+				t.Error("invalid channel status")
+			}
+			if !cmp.Equal(q, c.want2, cmpopts.IgnoreFields(q, "Timestamp")) {
+				t.Errorf("invalid answers: want %v got %v", c.want2, q)
+			}
+
+			// close the channel
+			cancel()
+			_, ok = <-quizCh
+			if ok {
+				t.Error("failed to close the channel")
+			}
+		})
+	}
+}
 
 func TestDummyLoader_Next(t *testing.T) {
 	cases := []struct {
