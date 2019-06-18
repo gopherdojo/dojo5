@@ -18,10 +18,10 @@ ${CMD_BUILD}: ${MAIN}
 
 .PHONY: ${CMD_TEST}
 ${CMD_TEST}:
-	go test -cover ${ROOT}/${TEST}
+	go test -race -cover ${ROOT}/${TEST}
 
 .PHONY: ${CMD_COVERAGE}
 ${CMD_COVERAGE}:
-	go test -coverprofile=${COVERAGE_FILE}.out ${ROOT}/${TEST}
+	go test -race -coverprofile=${COVERAGE_FILE}.out ${ROOT}/${TEST}
 	go tool cover -func=${COVERAGE_FILE}.out
 	go tool cover -html=${COVERAGE_FILE}.out -o ${COVERAGE_FILE}.html

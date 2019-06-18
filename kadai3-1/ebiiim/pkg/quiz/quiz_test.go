@@ -29,6 +29,7 @@ func TestDummyLoader_Next(t *testing.T) {
 	for _, c := range cases {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
 			l := &quiz.DummyLoader{}
 			q := l.Next()
 			if q.Text != c.quiz {
@@ -75,6 +76,7 @@ func TestJSONLoader_Next(t *testing.T) {
 	for _, c := range cases {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
 			l, err := quiz.NewJSONLoader(c.reader, c.seed)
 			if err != nil {
 				// non-normal cases
