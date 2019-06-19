@@ -15,6 +15,7 @@ import (
 
 type Downloader struct {
 	url *url.URL
+	ranges []string
 }
 
 func New(url *url.URL) *Downloader {
@@ -49,9 +50,9 @@ func (d *Downloader) download() error {
 		return errors.New("split download is not supported in this response")
 	}
 	length := int(resp.ContentLength)
-	ranges := splitToRanges(length)
+	d.splitToRanges(length)
 
-	err = d.downloadByRanges(ctx, ranges)
+	err = d.downloadByRanges(ctx)
 	if err != nil {
 		return err
 	}
@@ -72,7 +73,7 @@ func acceptBytesRanges(resp *http.Response) bool {
 	return resp.Header.Get("Accept-Ranges") == "bytes"
 }
 
-func splitToRanges(length int) []string {
+func (d *Downloader) splitToRanges(length int) {
 	rangeNum := 4 // FIXME: dynamically get range's number
 
 	var ranges []string
@@ -91,13 +92,13 @@ func splitToRanges(length int) []string {
 
 		ranges = append(ranges, fmt.Sprintf("bytes=%d-%d", rangeStart, rangeEnd))
 	}
-	return ranges
+	d.ranges = ranges
 }
 
-func (d *Downloader) downloadByRanges(ctx context.Context, ranges []string) error {
+func (d *Downloader) downloadByRanges(ctx context.Context) error {
 	var eg errgroup.Group
 
-	for i, r := range ranges {
+	for i, r := range d.ranges {
 		i, r := i, r
 		eg.Go(func() error {
 			req, err := http.NewRequest("GET", d.url.String(), nil)
