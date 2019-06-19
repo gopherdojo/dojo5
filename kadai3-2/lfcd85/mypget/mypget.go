@@ -1,6 +1,7 @@
 package mypget
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -20,11 +21,11 @@ func New(url *url.URL) *Downloader {
 
 func (d *Downloader) Execute() error {
 	fmt.Println("Hello, split downloader!")
-	err := d.Download()
+	err := d.download()
 	return err
 }
 
-func (d *Downloader) Download() error {
+func (d *Downloader) download() error {
 	req, err := http.NewRequest("GET", d.url.String(), nil)
 	if err != nil {
 		return err
@@ -36,6 +37,10 @@ func (d *Downloader) Download() error {
 	}
 	defer resp.Body.Close()
 
+	if !acceptBytesRanges(resp) {
+		return errors.New("split download is not supported in this response")
+	}
+
 	// FIXME: create proper directory for downloading
 	f, err := os.Create("./output.jpg")
 	if err != nil {
@@ -45,4 +50,8 @@ func (d *Downloader) Download() error {
 
 	_, err = io.Copy(f, resp.Body)
 	return err
+}
+
+func acceptBytesRanges(resp *http.Response) bool {
+	return resp.Header.Get("Accept-Ranges") == "bytes"
 }
