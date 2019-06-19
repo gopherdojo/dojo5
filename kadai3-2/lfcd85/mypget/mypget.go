@@ -57,15 +57,11 @@ func (d *Downloader) download() error {
 		return err
 	}
 
-	// FIXME: create proper directory for downloading
-	f, err := os.Create("./output.jpg")
+	err = d.combine()
 	if err != nil {
 		return err
 	}
-	defer f.Close()
 
-	// TODO: replace with partial combine function
-	_, err = io.Copy(f, resp.Body)
 	return err
 }
 
@@ -119,8 +115,8 @@ func (d *Downloader) downloadByRanges(ctx context.Context) error {
 				return err
 			}
 
-			// FIXME: create proper directory and partial name for downloading
-			partialName := "./partial_" + strconv.Itoa(i)
+			// FIXME: create proper directory for downloading
+			partialName := generatePartialName(i)
 			fmt.Printf("Downloading %v (%v) ...\n", partialName, r)
 
 			f, err := os.Create(partialName)
@@ -140,6 +136,38 @@ func validateStatusPartialContent(resp *http.Response) error {
 	validStatusCode := http.StatusPartialContent
 	if resp.StatusCode != validStatusCode {
 		return fmt.Errorf("status code must be %d: actually was %d", validStatusCode, resp.StatusCode)
+	}
+	return nil
+}
+
+func generatePartialName(i int) string {
+	// TODO: should the raw file name be const?
+	return "./partial_" + strconv.Itoa(i)
+}
+
+func (d *Downloader) combine() error {
+	outputPath := "./output" // FIXME: replace with proper file name
+	f, err := os.Create(outputPath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	fmt.Printf("Combining partials to %v ...\n", outputPath)
+
+	for i, _ := range d.ranges {
+		partialName := generatePartialName(i)
+		partial, err := os.Open(partialName)
+		if err != nil {
+			return err
+		}
+
+		_, err = io.Copy(f, partial)
+		if err != nil {
+			return err
+		}
+
+		// FIXME: delete partials after combining
 	}
 	return nil
 }
