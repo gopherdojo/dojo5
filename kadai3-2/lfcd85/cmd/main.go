@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"flag"
 	"fmt"
 	"net/url"
 
@@ -8,8 +10,15 @@ import (
 )
 
 func main() {
-	// FIXME: get URL from option
-	url, err := url.Parse("https://golang.org/doc/gopher/frontpage.png")
+	flag.Parse()
+	urlStr := flag.Arg(0)
+	if urlStr == "" {
+		err := errors.New("URL is not inputted")
+		fmt.Println(err) // TODO: beautify error handling
+		return
+	}
+
+	url, err := url.Parse(urlStr)
 	if err != nil {
 		fmt.Println(err)
 		return
