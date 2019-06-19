@@ -12,20 +12,65 @@ import (
 	"github.com/gopherdojo/dojo5/kadai3-1/ebiiim/pkg/quiz"
 )
 
-//func TestMakeAnswerChannel(t *testing.T) {
-//
-//}
+func TestMakeAnswerChannel(t *testing.T) {
+	var (
+		input1 = strings.NewReader("abc\nabc\nabc\n") // input 3 lines
+		ans1   = &quiz.Answer{Text: "abc"}
+	)
+	cases := []struct {
+		name  string
+		input io.Reader
+		want1 *quiz.Answer
+		want2 *quiz.Answer
+	}{
+		{name: "normal", input: input1, want1: ans1, want2: ans1},
+	}
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := context.WithCancel(context.Background())
+			ansCh := quiz.MakeAnswerChannel(ctx, c.input)
+
+			// the 1st answer is entered
+			ans, ok := <-ansCh
+			if !ok {
+				t.Error("invalid channel status")
+			}
+			if !cmp.Equal(*ans, *c.want1, cmpopts.IgnoreFields(*ans, "Timestamp")) {
+				t.Errorf("invalid answers: want %v got %v", c.want1, *ans)
+			}
+
+			// the 2nd answer is entered
+			ans, ok = <-ansCh
+			if !ok {
+				t.Error("invalid channel status")
+			}
+			if !cmp.Equal(*ans, *c.want2, cmpopts.IgnoreFields(*ans, "Timestamp")) {
+				t.Errorf("invalid answers: want %v got %v", c.want2, *ans)
+			}
+
+			// close the channel
+			cancel()
+			_, ok = <-ansCh
+			if ok {
+				t.Error("failed to close the channel")
+			}
+		})
+	}
+}
 
 func TestMakeQuizChannel(t *testing.T) {
 	var (
 		loader1   = &quiz.DummyLoader{}
-		dummyQuiz = quiz.Quiz{Text: "abc", Answers: []string{"abc"}}
+		dummyQuiz = &quiz.Quiz{Text: "abc", Answers: []string{"abc"}}
 	)
 	cases := []struct {
 		name   string
 		loader quiz.Loader
-		want1  quiz.Quiz
-		want2  quiz.Quiz
+		want1  *quiz.Quiz
+		want2  *quiz.Quiz
 	}{
 		{name: "normal", loader: loader1, want1: dummyQuiz, want2: dummyQuiz},
 	}
@@ -44,8 +89,8 @@ func TestMakeQuizChannel(t *testing.T) {
 			if !ok {
 				t.Error("invalid channel status")
 			}
-			if !cmp.Equal(q, c.want1, cmpopts.IgnoreFields(q, "Timestamp")) {
-				t.Errorf("invalid answers: want %v got %v", c.want1, q)
+			if !cmp.Equal(*q, *c.want1, cmpopts.IgnoreFields(*q, "Timestamp")) {
+				t.Errorf("invalid quiz: want %v got %v", c.want1, *q)
 			}
 
 			// get the 2nd quiz
@@ -54,8 +99,8 @@ func TestMakeQuizChannel(t *testing.T) {
 			if !ok {
 				t.Error("invalid channel status")
 			}
-			if !cmp.Equal(q, c.want2, cmpopts.IgnoreFields(q, "Timestamp")) {
-				t.Errorf("invalid answers: want %v got %v", c.want2, q)
+			if !cmp.Equal(*q, *c.want2, cmpopts.IgnoreFields(*q, "Timestamp")) {
+				t.Errorf("invalid quiz: want %v got %v", c.want2, *q)
 			}
 
 			// close the channel

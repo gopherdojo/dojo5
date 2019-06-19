@@ -13,8 +13,8 @@ import (
 
 // MakeAnswerChannel returns a read-only channel that passes data scanned from the given io.Reader.
 // FIXME: inputCh does not close because scanner.Scan() is blocking.
-func MakeAnswerChannel(ctx context.Context, input io.Reader) <-chan Answer {
-	inputCh := make(chan Answer)
+func MakeAnswerChannel(ctx context.Context, input io.Reader) <-chan *Answer {
+	inputCh := make(chan *Answer)
 	scanner := bufio.NewScanner(input)
 
 	go func() {
@@ -26,7 +26,7 @@ func MakeAnswerChannel(ctx context.Context, input io.Reader) <-chan Answer {
 				return
 			default:
 				scanner.Scan()
-				inputCh <- Answer{Timestamp: time.Now(), Text: scanner.Text()}
+				inputCh <- &Answer{Timestamp: time.Now(), Text: scanner.Text()}
 			}
 		}
 	}()
@@ -47,8 +47,8 @@ type Answer struct {
 }
 
 // MakeQuizChannel returns a read-only channel, that provides Quiz when some data passed from the `next` channel.
-func MakeQuizChannel(ctx context.Context, next <-chan interface{}, quizLoader Loader) <-chan Quiz {
-	quizCh := make(chan Quiz)
+func MakeQuizChannel(ctx context.Context, next <-chan interface{}, quizLoader Loader) <-chan *Quiz {
+	quizCh := make(chan *Quiz)
 	go func() {
 		//defer fmt.Println("closed QuizChannel")
 		defer close(quizCh)
@@ -66,25 +66,25 @@ func MakeQuizChannel(ctx context.Context, next <-chan interface{}, quizLoader Lo
 
 // Loader interface provides a Next function that provides quizzes from a quiz database.
 type Loader interface {
-	Next() Quiz
+	Next() *Quiz
 }
 
 // DummyLoader struct provides a dummy Loader for testing.
 type DummyLoader struct{}
 
 // Next returns a Quiz: {Timestamp: NOW, Text: "abc", Answers: ["abc"]}
-func (l *DummyLoader) Next() Quiz {
-	return Quiz{Timestamp: time.Now(), Text: "abc", Answers: []string{"abc"}}
+func (l *DummyLoader) Next() *Quiz {
+	return &Quiz{Timestamp: time.Now(), Text: "abc", Answers: []string{"abc"}}
 }
 
 // JSONLoader struct provides a Loader that uses JSON for the database.
 type JSONLoader struct {
-	QuizList []Quiz
+	QuizList []*Quiz
 	random   *rand.Rand
 }
 
 // Next returns a randomly loaded Quiz from QuizList.
-func (l *JSONLoader) Next() Quiz {
+func (l *JSONLoader) Next() *Quiz {
 	n := len(l.QuizList)
 	q := l.QuizList[l.random.Intn(n)]
 	q.Timestamp = time.Now()

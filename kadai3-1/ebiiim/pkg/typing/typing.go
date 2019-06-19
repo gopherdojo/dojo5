@@ -11,15 +11,15 @@ import (
 // Game struct holds channels and lists for the typing game.
 type Game struct {
 	// receive the next quiz
-	QuizChannel <-chan quiz.Quiz
+	QuizChannel <-chan *quiz.Quiz
 	// scan input
-	AnswerChannel <-chan quiz.Answer
+	AnswerChannel <-chan *quiz.Answer
 	// receive time's up
 	TimerChannel <-chan interface{}
 	// a list of quizzes which appeared
-	QuizList []quiz.Quiz
+	QuizList []*quiz.Quiz
 	// a list of input texts with timestamps
-	AnswerList []quiz.Answer
+	AnswerList []*quiz.Answer
 	timeSec    int
 }
 
