@@ -70,6 +70,10 @@ func (tg *TypingGame) waitExit() string {
 }
 
 func (tg *TypingGame) initGame(c <-chan struct{}) error {
+	if len(tg.Sentences) == 0 { // no given sample sentences
+		return fmt.Errorf("no sample sentences given")
+	}
+
 	tg.timeChan = c
 	tg.errChan = make(chan error, 2)     // cap for 1 error and closing channel data
 	tg.sigChan = make(chan os.Signal, 2) // cap for 1 signal and closing channel data
@@ -79,10 +83,6 @@ func (tg *TypingGame) initGame(c <-chan struct{}) error {
 
 	if tg.PickSentence == nil {
 		tg.PickSentence = defaultSentencePickFnc
-	}
-
-	if len(tg.Sentences) == 0 { // no given sample sentences
-		return fmt.Errorf("no sample sentences given")
 	}
 
 	return nil
