@@ -1,7 +1,10 @@
 package typinggame
 
 import (
+	"bytes"
+	"context"
 	"fmt"
+	"io"
 	"os"
 	"syscall"
 	"testing"
@@ -19,11 +22,6 @@ func TestTypingGame_Start(t *testing.T) {
 		errC <- fmt.Errorf("error while read/write to io")
 	}
 
-	type fields struct {
-		doneChan chan string
-		sigChan  chan os.Signal
-		errChan  chan error
-	}
 	tests := []struct {
 		name           string
 		fireTimeoutFnc func(timeC chan struct{})
@@ -53,6 +51,7 @@ func TestTypingGame_Start(t *testing.T) {
 			wantExitReason: "Got error: error while read/write to io",
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			timeC := make(chan struct{}, 1)
@@ -83,6 +82,114 @@ func TestTypingGame_Start(t *testing.T) {
 			reason := tg.waitExit()
 			if reason != tt.wantExitReason {
 				t.Errorf("TypingGame.Start() = %v, want %v", reason, tt.wantExitReason)
+			}
+		})
+	}
+}
+
+var sampleSentence = []string{
+	"sample sentence 1",
+	"sample sentence 2",
+	"sample sentence 3",
+}
+
+type mockReader struct {
+	corrected int
+	readTurn  int
+	err       error
+}
+
+func (m *mockReader) Read(p []byte) (int, error) {
+	if m.err != nil {
+		return 0, m.err
+	}
+	if m.readTurn == m.corrected {
+		return 0, nil // read done
+	}
+
+	// read next sentence from sampleSentence
+	sentence := []byte(sampleSentence[m.readTurn])
+	for i, b := range sentence {
+		p[i] = b
+	}
+	p[len(sentence)] = '\n' // simulate newline character
+
+	m.readTurn++
+
+	return len(sentence) + 1, nil
+}
+
+func TestTypingGame_CorrectSentences(t *testing.T) {
+	picker := func(idx int) PickerFnc {
+		return func(sentences []string) string {
+			idx++
+			if len(sentences) == 0 || idx >= len(sentences) {
+				return ""
+			}
+			return sentences[idx]
+		}
+	}
+
+	type fields struct {
+		errChan chan error
+		textIn  io.Reader
+		textOut io.Writer
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   int
+	}{
+		{
+			name: "no corrected sentence",
+			fields: fields{
+				errChan: make(chan error, 2),
+				textIn:  &mockReader{corrected: 0},
+				textOut: &bytes.Buffer{},
+			},
+			want: 0,
+		},
+		{
+			name: "1 corrected sentence",
+			fields: fields{
+				errChan: make(chan error, 2),
+				textIn:  &mockReader{corrected: 1},
+				textOut: &bytes.Buffer{},
+			},
+			want: 1,
+		},
+		{
+			name: "2 corrected sentences",
+			fields: fields{
+				errChan: make(chan error, 2),
+				textIn:  &mockReader{corrected: 2},
+				textOut: &bytes.Buffer{},
+			},
+			want: 2,
+		},
+		{
+			name: "error on io.Reader",
+			fields: fields{
+				errChan: make(chan error, 2),
+				textIn:  &mockReader{err: fmt.Errorf("error on io.Reader")},
+				textOut: &bytes.Buffer{},
+			},
+			want: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tg := &TypingGame{
+				Sentences:    sampleSentence,
+				PickSentence: picker(-1),
+				errChan:      tt.fields.errChan,
+				textIn:       tt.fields.textIn,
+				textOut:      tt.fields.textOut,
+			}
+
+			tg.play(context.Background())
+			if got := tg.CorrectSentences(); got != tt.want {
+				t.Errorf("TypingGame.CorrectSentences() = %v, want %v", got, tt.want)
 			}
 		})
 	}

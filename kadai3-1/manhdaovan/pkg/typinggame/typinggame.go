@@ -23,14 +23,14 @@ type TypingGame struct {
 	PickSentence PickerFnc
 	QuitSigs     []os.Signal
 
-	sigChan      chan os.Signal
-	errChan      chan error
-	timeChan     <- chan struct{}
+	sigChan  chan os.Signal
+	errChan  chan error
+	timeChan <-chan struct{}
 
-	textIn       io.Reader
-	textOut      io.Writer
+	textIn  io.Reader
+	textOut io.Writer
 
-	correctNum   int
+	correctNum int
 }
 
 // Start starts the game
@@ -69,7 +69,7 @@ func (tg *TypingGame) waitExit() string {
 	return exitReason
 }
 
-func (tg *TypingGame) initGame(c <- chan struct{}) error {
+func (tg *TypingGame) initGame(c <-chan struct{}) error {
 	tg.timeChan = c
 	tg.errChan = make(chan error, 2)     // cap for 1 error and closing channel data
 	tg.sigChan = make(chan os.Signal, 2) // cap for 1 signal and closing channel data
@@ -105,8 +105,8 @@ func (tg *TypingGame) play(ctx context.Context) {
 			return
 		}
 
-		inputSentence := scanner.Bytes()
-		if string(inputSentence) == sampleSentence {
+		inputSentence := scanner.Text()
+		if inputSentence == sampleSentence {
 			tg.correctNum++
 		}
 
