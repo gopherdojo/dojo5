@@ -1,12 +1,16 @@
 package mypget
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
+
+	"golang.org/x/sync/errgroup"
 )
 
 type Downloader struct {
@@ -26,6 +30,10 @@ func (d *Downloader) Execute() error {
 }
 
 func (d *Downloader) download() error {
+	bc := context.Background()
+	ctx, cancel := context.WithCancel(bc)
+	defer cancel()
+
 	req, err := http.NewRequest("GET", d.url.String(), nil)
 	if err != nil {
 		return err
@@ -42,7 +50,11 @@ func (d *Downloader) download() error {
 	}
 	length := int(resp.ContentLength)
 	ranges := splitToRanges(length)
-	fmt.Println(ranges) // TODO: split downloading by ranges
+
+	err = d.downloadByRanges(ctx, ranges)
+	if err != nil {
+		return err
+	}
 
 	// FIXME: create proper directory for downloading
 	f, err := os.Create("./output.jpg")
@@ -51,6 +63,7 @@ func (d *Downloader) download() error {
 	}
 	defer f.Close()
 
+	// TODO: replace with partial combine function
 	_, err = io.Copy(f, resp.Body)
 	return err
 }
@@ -79,4 +92,53 @@ func splitToRanges(length int) []string {
 		ranges = append(ranges, fmt.Sprintf("bytes=%d-%d", rangeStart, rangeEnd))
 	}
 	return ranges
+}
+
+func (d *Downloader) downloadByRanges(ctx context.Context, ranges []string) error {
+	var eg errgroup.Group
+
+	for i, r := range ranges {
+		i, r := i, r
+		eg.Go(func() error {
+			req, err := http.NewRequest("GET", d.url.String(), nil)
+			if err != nil {
+				return err
+			}
+			req = req.WithContext(ctx)
+			req.Header.Set("Range", r)
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				return err
+			}
+			defer resp.Body.Close()
+
+			err = validateStatusPartialContent(resp)
+			if err != nil {
+				return err
+			}
+
+			// FIXME: create proper directory and partial name for downloading
+			partialName := "./partial_" + strconv.Itoa(i)
+			fmt.Printf("Downloading %v (%v) ...\n", partialName, r)
+
+			f, err := os.Create(partialName)
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+
+			_, err = io.Copy(f, resp.Body)
+			return err
+		})
+	}
+	return eg.Wait()
+}
+
+func validateStatusPartialContent(resp *http.Response) error {
+	validStatusCode := http.StatusPartialContent
+	if resp.StatusCode != validStatusCode {
+		return fmt.Errorf("status code must be %d: actually was %d", validStatusCode, resp.StatusCode)
+	}
+	return nil
 }
