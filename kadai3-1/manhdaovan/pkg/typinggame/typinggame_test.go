@@ -120,7 +120,9 @@ func (m *mockReader) Read(p []byte) (int, error) {
 }
 
 func TestTypingGame_CorrectSentences(t *testing.T) {
-	picker := func(idx int) PickerFnc {
+	initPicker := func() PickerFnc {
+		idx := -1
+
 		return func(sentences []string) string {
 			idx++
 			if len(sentences) == 0 || idx >= len(sentences) {
@@ -181,7 +183,7 @@ func TestTypingGame_CorrectSentences(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tg := &TypingGame{
 				Sentences:    sampleSentence,
-				PickSentence: picker(-1),
+				PickSentence: initPicker(),
 				errChan:      tt.fields.errChan,
 				textIn:       tt.fields.textIn,
 				textOut:      tt.fields.textOut,
