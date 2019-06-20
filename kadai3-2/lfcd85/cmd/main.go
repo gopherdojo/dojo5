@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"net/url"
+	"os"
 
 	"github.com/gopherdojo/dojo5/kadai3-2/lfcd85/mypget"
 )
@@ -15,19 +16,19 @@ func main() {
 	urlStr := flag.Arg(0)
 	if urlStr == "" {
 		err := errors.New("URL is not inputted")
-		fmt.Println(err) // TODO: beautify error handling
-		return
+		fmt.Fprintln(os.Stderr, "error: ", err)
+		os.Exit(1)
 	}
 
 	url, err := url.Parse(urlStr)
 	if err != nil {
-		fmt.Println(err)
-		return
+		fmt.Fprintln(os.Stderr, "error: ", err)
+		os.Exit(1)
 	}
 
 	err = mypget.New(url, *splitNum).Execute()
 	if err != nil {
-		fmt.Println(err)
-		return
+		fmt.Fprintln(os.Stderr, "error: ", err)
+		os.Exit(1)
 	}
 }
