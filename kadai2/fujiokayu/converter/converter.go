@@ -38,6 +38,8 @@ func dec(filePath string, decodeType string) (image.Image, error) {
 		return jpeg.Decode(reader)
 	case "png":
 		return png.Decode(reader)
+	default:
+		err = fmt.Errorf("undefined decodeType: %s", decodeType)
 	}
 	return nil, err
 }
@@ -57,13 +59,15 @@ func enc(filePath string, encodeType string, m image.Image) error {
 		return jpeg.Encode(writer, m, nil)
 	case "png":
 		return png.Encode(writer, m)
+	default:
+		err = fmt.Errorf("undefined encodeType: %s", encodeType)
 	}
-	return nil
+	return err
 }
 
 //Convert : convert decodeType file to encodeType file
 func Convert(filePath string, decodeType string, encodeType string) error {
-	fmt.Println("Converting", filePath)
+	fmt.Println("Converting: ", filePath)
 
 	m, err := dec(filePath, decodeType)
 	if err != nil {
@@ -75,6 +79,6 @@ func Convert(filePath string, decodeType string, encodeType string) error {
 		return err
 	}
 
-	fmt.Println("Converted", filePath)
+	fmt.Println("Converted : ", strings.TrimSuffix(filePath, path.Ext(filePath))+"."+encodeType)
 	return nil
 }
