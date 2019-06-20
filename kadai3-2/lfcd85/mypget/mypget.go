@@ -22,13 +22,15 @@ const (
 )
 
 type Downloader struct {
-	url    *url.URL
-	ranges []string
+	url      *url.URL
+	splitNum int
+	ranges   []string
 }
 
-func New(url *url.URL) *Downloader {
+func New(url *url.URL, splitNum int) *Downloader {
 	return &Downloader{
-		url: url,
+		url:      url,
+		splitNum: splitNum,
 	}
 }
 
@@ -83,19 +85,17 @@ func acceptBytesRanges(resp *http.Response) bool {
 }
 
 func (d *Downloader) splitToRanges(length int) {
-	rangeNum := 4 // FIXME: dynamically get range's number
-
 	var ranges []string
 	var rangeStart, rangeEnd int
-	rangeLength := length / rangeNum
+	rangeLength := length / d.splitNum
 
-	for i := 0; i < rangeNum; i++ {
+	for i := 0; i < d.splitNum; i++ {
 		if i != 0 {
 			rangeStart = rangeEnd + 1
 		}
 		rangeEnd = rangeStart + rangeLength
 
-		if i == rangeNum-1 && rangeEnd != length {
+		if i == d.splitNum-1 && rangeEnd != length {
 			rangeEnd = length
 		}
 

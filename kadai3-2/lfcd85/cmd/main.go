@@ -10,6 +10,7 @@ import (
 )
 
 func main() {
+	splitNum := flag.Int("n", 8, "Number of splitted downloads")
 	flag.Parse()
 	urlStr := flag.Arg(0)
 	if urlStr == "" {
@@ -24,7 +25,7 @@ func main() {
 		return
 	}
 
-	err = mypget.New(url).Execute()
+	err = mypget.New(url, *splitNum).Execute()
 	if err != nil {
 		fmt.Println(err)
 		return
