@@ -58,7 +58,11 @@ func (d *Downloader) download() error {
 	if !acceptBytesRanges(resp) {
 		return errors.New("split download is not supported in this response")
 	}
+
 	length := int(resp.ContentLength)
+	if length < d.splitNum {
+		return errors.New("the number of split ranges is larger than file length")
+	}
 	d.splitToRanges(length)
 
 	tempDir, err := ioutil.TempDir("", tempDirName)
