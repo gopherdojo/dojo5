@@ -35,11 +35,6 @@ func New(url *url.URL, splitNum int) *Downloader {
 }
 
 func (d *Downloader) Execute() error {
-	err := d.download()
-	return err
-}
-
-func (d *Downloader) download() error {
 	bc := context.Background()
 	ctx, cancel := context.WithCancel(bc)
 	defer cancel()
