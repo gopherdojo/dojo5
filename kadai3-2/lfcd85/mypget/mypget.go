@@ -15,7 +15,7 @@ import (
 )
 
 type Downloader struct {
-	url *url.URL
+	url    *url.URL
 	ranges []string
 }
 
@@ -82,7 +82,7 @@ func (d *Downloader) splitToRanges(length int) {
 		}
 		rangeEnd = rangeStart + rangeLength
 
-		if i == rangeNum - 1 && rangeEnd != length {
+		if i == rangeNum-1 && rangeEnd != length {
 			rangeEnd = length
 		}
 
