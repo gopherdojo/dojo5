@@ -1,4 +1,4 @@
-BIN := typinggame
+BIN := gdown
 
 .PHONY: test
 test:
@@ -6,7 +6,7 @@ test:
 
 .PHONY: build
 build: test
-	go build -o $(BIN)
+	go build -o $(BIN) ./cmd/gdown
 
 .PHONY: clean
 clean:
