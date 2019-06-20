@@ -21,12 +21,14 @@ const (
 	tempFilePrefix = "partial"
 )
 
+// Downloader stores the information used for split downloading.
 type Downloader struct {
 	url      *url.URL
 	splitNum int
 	ranges   []string
 }
 
+// New creates a Downloader struct.
 func New(url *url.URL, splitNum int) *Downloader {
 	return &Downloader{
 		url:      url,
@@ -34,6 +36,7 @@ func New(url *url.URL, splitNum int) *Downloader {
 	}
 }
 
+// Execute do the split download.
 func (d *Downloader) Execute() error {
 	bc := context.Background()
 	ctx, cancel := context.WithCancel(bc)
