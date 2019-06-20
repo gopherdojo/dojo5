@@ -23,9 +23,10 @@ const (
 
 // Downloader stores the information used for split downloading.
 type Downloader struct {
-	url      *url.URL
-	splitNum int
-	ranges   []string
+	url        *url.URL
+	splitNum   int
+	ranges     []string
+	outputPath string
 }
 
 // New creates a Downloader struct.
@@ -78,6 +79,7 @@ func (d *Downloader) Execute() error {
 	if err != nil {
 		return err
 	}
+	fmt.Printf("Download completed! saved at: %v\n", d.outputPath)
 
 	return err
 }
@@ -131,7 +133,7 @@ func (d *Downloader) downloadByRanges(ctx context.Context, tempDir string) error
 			}
 
 			partialPath := generatePartialPath(tempDir, i)
-			fmt.Printf("Downloading %v (%v) ...\n", partialPath, r)
+			fmt.Printf("Downloading range %v / %v (%v) ...\n", i+1, len(d.ranges), r)
 
 			f, err := os.Create(partialPath)
 			if err != nil {
@@ -160,14 +162,14 @@ func generatePartialPath(tempDir string, i int) string {
 }
 
 func (d *Downloader) combine(tempDir string) error {
-	outputPath := d.getOutputFileName()
-	f, err := os.Create(outputPath)
+	d.outputPath = d.getOutputFileName()
+	f, err := os.Create(d.outputPath)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	fmt.Printf("Combining partials to %v ...\n", outputPath)
+	fmt.Printf("Combining partials to %v ...\n", d.outputPath)
 
 	for i, _ := range d.ranges {
 		partialPath := generatePartialPath(tempDir, i)
