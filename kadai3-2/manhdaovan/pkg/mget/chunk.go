@@ -1,12 +1,16 @@
 package mget
 
+import (
+	"fmt"
+	"path/filepath"
+)
+
 type chunkInfo struct {
-	idx          int
-	url          string
-	baseFileName string
-	size         uint64
-	rangeLow     uint64
-	rangeHigh    uint64
+	idx       int
+	url       string
+	size      uint64
+	rangeLow  uint64
+	rangeHigh uint64
 }
 
 func newChunkInfo(idx int, url string, fileSize, chunkSize uint64) *chunkInfo {
@@ -24,7 +28,7 @@ func newChunkInfo(idx int, url string, fileSize, chunkSize uint64) *chunkInfo {
 	}
 }
 
-type chunkData struct {
-	chunkPath string
-	idx       int
+func chunkPath(dstDir, dstFile string, idx int) string {
+	chunkName := fmt.Sprintf("%s-%d.chunk", dstFile, idx)
+	return filepath.Join(dstDir, chunkName)
 }
