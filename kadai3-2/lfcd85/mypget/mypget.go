@@ -5,13 +5,20 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"golang.org/x/sync/errgroup"
+)
+
+const (
+	tempDirName    = "partials"
+	tempFilePrefix = "partial"
 )
 
 type Downloader struct {
@@ -52,12 +59,18 @@ func (d *Downloader) download() error {
 	length := int(resp.ContentLength)
 	d.splitToRanges(length)
 
-	err = d.downloadByRanges(ctx)
+	tempDir, err := ioutil.TempDir("", tempDirName)
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(tempDir)
+
+	err = d.downloadByRanges(ctx, tempDir)
 	if err != nil {
 		return err
 	}
 
-	err = d.combine()
+	err = d.combine(tempDir)
 	if err != nil {
 		return err
 	}
@@ -91,7 +104,7 @@ func (d *Downloader) splitToRanges(length int) {
 	d.ranges = ranges
 }
 
-func (d *Downloader) downloadByRanges(ctx context.Context) error {
+func (d *Downloader) downloadByRanges(ctx context.Context, tempDir string) error {
 	var eg errgroup.Group
 
 	for i, r := range d.ranges {
@@ -116,10 +129,10 @@ func (d *Downloader) downloadByRanges(ctx context.Context) error {
 			}
 
 			// FIXME: create proper directory for downloading
-			partialName := generatePartialName(i)
-			fmt.Printf("Downloading %v (%v) ...\n", partialName, r)
+			partialPath := generatePartialPath(tempDir, i)
+			fmt.Printf("Downloading %v (%v) ...\n", partialPath, r)
 
-			f, err := os.Create(partialName)
+			f, err := os.Create(partialPath)
 			if err != nil {
 				return err
 			}
@@ -140,12 +153,12 @@ func validateStatusPartialContent(resp *http.Response) error {
 	return nil
 }
 
-func generatePartialName(i int) string {
-	// TODO: should the raw file name be const?
-	return "./partial_" + strconv.Itoa(i)
+func generatePartialPath(tempDir string, i int) string {
+	base := strings.Join([]string{tempFilePrefix, strconv.Itoa(i)}, "_")
+	return strings.Join([]string{tempDir, base}, "/")
 }
 
-func (d *Downloader) combine() error {
+func (d *Downloader) combine(tempDir string) error {
 	outputPath := d.getOutputFileName()
 	f, err := os.Create(outputPath)
 	if err != nil {
@@ -156,8 +169,8 @@ func (d *Downloader) combine() error {
 	fmt.Printf("Combining partials to %v ...\n", outputPath)
 
 	for i, _ := range d.ranges {
-		partialName := generatePartialName(i)
-		partial, err := os.Open(partialName)
+		partialPath := generatePartialPath(tempDir, i)
+		partial, err := os.Open(partialPath)
 		if err != nil {
 			return err
 		}
@@ -166,8 +179,6 @@ func (d *Downloader) combine() error {
 		if err != nil {
 			return err
 		}
-
-		// FIXME: delete partials after combining
 	}
 	return nil
 }
