@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"golang.org/x/sync/errgroup"
@@ -25,7 +26,6 @@ func New(url *url.URL) *Downloader {
 }
 
 func (d *Downloader) Execute() error {
-	fmt.Println("Hello, split downloader!")
 	err := d.download()
 	return err
 }
@@ -146,7 +146,7 @@ func generatePartialName(i int) string {
 }
 
 func (d *Downloader) combine() error {
-	outputPath := "./output" // FIXME: replace with proper file name
+	outputPath := d.getOutputFileName()
 	f, err := os.Create(outputPath)
 	if err != nil {
 		return err
@@ -170,4 +170,14 @@ func (d *Downloader) combine() error {
 		// FIXME: delete partials after combining
 	}
 	return nil
+}
+
+func (d *Downloader) getOutputFileName() string {
+	base := filepath.Base(d.url.EscapedPath())
+	switch base {
+	case "/", ".", "":
+		return "output"
+	default:
+		return base
+	}
 }
