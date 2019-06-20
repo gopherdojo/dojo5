@@ -128,7 +128,6 @@ func (d *Downloader) downloadByRanges(ctx context.Context, tempDir string) error
 				return err
 			}
 
-			// FIXME: create proper directory for downloading
 			partialPath := generatePartialPath(tempDir, i)
 			fmt.Printf("Downloading %v (%v) ...\n", partialPath, r)
 
