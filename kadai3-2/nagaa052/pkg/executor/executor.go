@@ -8,7 +8,7 @@ import (
 )
 
 type Payload interface {
-	Execute() error
+	Execute(context.Context) error
 }
 
 type Job struct {
@@ -17,18 +17,18 @@ type Job struct {
 
 type Executor struct {
 	Timeout time.Duration
-	Jobs    []Job
+	Jobs    []*Job
 }
 
 func New(maxWorkers int, timeout time.Duration) *Executor {
 	return &Executor{
 		Timeout: timeout,
-		Jobs:    make([]Job, 0),
+		Jobs:    make([]*Job, 0),
 	}
 }
 
-func (ex *Executor) AddJob(job Job) {
-	ex.Jobs = append(ex.Jobs, job)
+func (ex *Executor) AddPayload(payload Payload) {
+	ex.Jobs = append(ex.Jobs, &Job{payload})
 }
 
 func (ex *Executor) Start() error {
@@ -37,13 +37,9 @@ func (ex *Executor) Start() error {
 	defer cancel()
 
 	for _, job := range ex.Jobs {
+		job := job
 		eg.Go(func() error {
-			select {
-			case <-ctx.Done():
-				return nil
-			default:
-				return job.Execute()
-			}
+			return job.Execute(ctx)
 		})
 	}
 

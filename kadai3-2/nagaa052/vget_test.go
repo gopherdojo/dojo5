@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	vget "github.com/gopherdojo/dojo5/kadai3-1/nagaa052"
+	vget "github.com/gopherdojo/dojo5/kadai3-2/nagaa052"
 )
 
 func TestNew(t *testing.T) {
