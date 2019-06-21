@@ -38,7 +38,7 @@ type Grade struct {
 }
 
 // NewTypingGame initializes Game.
-func NewTypingGame(ctx context.Context, nextQuizCh <-chan interface{}, quizLoader quiz.Loader, reader io.Reader, timeSec int) *Game {
+func NewTypingGame(ctx context.Context, nextQuizCh <-chan struct{}, quizLoader quiz.Loader, reader io.Reader, timeSec int) *Game {
 	g := &Game{timeSec: timeSec}
 	g.QuizChannel = quiz.MakeQuizChannel(ctx, nextQuizCh, quizLoader)
 	g.AnswerChannel = quiz.MakeAnswerChannel(ctx, reader)

@@ -16,7 +16,7 @@ func game(quizFilePath string, timeSec int, randSeed int64) {
 	bc := context.Background()
 	ctx, cancel := context.WithCancel(bc)
 	defer cancel()
-	nextQuizCh := make(chan interface{})
+	nextQuizCh := make(chan struct{})
 
 	// load quiz
 	reader, err := os.Open(quizFilePath)

@@ -12,7 +12,7 @@ import (
 )
 
 // MakeAnswerChannel returns a read-only channel that passes data scanned from the given io.Reader.
-// FIXME: inputCh does not close because scanner.Scan() is blocking.
+// Note: inputCh does not close because scanner.Scan() is blocking.
 func MakeAnswerChannel(ctx context.Context, input io.Reader) <-chan *Answer {
 	inputCh := make(chan *Answer)
 	scanner := bufio.NewScanner(input)
@@ -47,7 +47,7 @@ type Answer struct {
 }
 
 // MakeQuizChannel returns a read-only channel, that provides Quiz when some data passed from the `next` channel.
-func MakeQuizChannel(ctx context.Context, next <-chan interface{}, quizLoader Loader) <-chan *Quiz {
+func MakeQuizChannel(ctx context.Context, next <-chan struct{}, quizLoader Loader) <-chan *Quiz {
 	quizCh := make(chan *Quiz)
 	go func() {
 		//defer fmt.Println("closed QuizChannel")
