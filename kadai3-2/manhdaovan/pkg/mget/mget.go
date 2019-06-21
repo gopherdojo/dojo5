@@ -77,16 +77,17 @@ func (m *MGet) download(ctx context.Context, url string) (savedFilePath string, 
 	}
 
 	chunkSize := fileSize / uint64(m.WorkerNum)
-	if fileSize%uint64(m.WorkerNum) != 0 {
+	if (fileSize % uint64(m.WorkerNum)) != 0 {
 		m.WorkerNum++ // recalculate workers to fit with chunks
 	}
+	fmt.Printf("wokers --------- %+v, %d, %d\n", m, chunkSize, fileSize)
 
 	go func() {
 		eg, ctx := errgroup.WithContext(ctx)
 		for i := 0; i < m.WorkerNum; i++ {
-			fileChunk := newChunkInfo(i, url, fileSize, chunkSize)
+			chunk := newChunkInfo(i, url, fileSize, chunkSize)
 			eg.Go(func() error {
-				return m.downloadChunk(ctx, fileChunk)
+				return m.downloadChunk(ctx, chunk)
 			})
 		}
 
@@ -114,11 +115,13 @@ func (m *MGet) download(ctx context.Context, url string) (savedFilePath string, 
 		return
 	}
 
-	savedFilePath, err = m.summary()
+	savedFilePath, err = m.mergeChunks()
 	return
 }
 
 func (m *MGet) downloadChunk(ctx context.Context, chunk *chunkInfo) error {
+	fmt.Printf("chunk --------- %+v\n", chunk)
+
 	// create get request
 	req, err := http.NewRequest("GET", chunk.url, nil)
 	if err != nil {
@@ -156,7 +159,7 @@ func (m *MGet) downloadChunk(ctx context.Context, chunk *chunkInfo) error {
 	return nil
 }
 
-func (m *MGet) summary() (string, error) {
+func (m *MGet) mergeChunks() (string, error) {
 	savedPath := filepath.Join(m.dstDir, m.dstFile)
 	resultFile, err := os.Create(savedPath)
 	if err != nil {
@@ -164,26 +167,26 @@ func (m *MGet) summary() (string, error) {
 	}
 	defer resultFile.Close()
 
-	var eg errgroup.Group
+	mergeFunc := func(srcFile *os.File, chunkPath string) error {
+		chunkData, err := os.Open(chunkPath)
+		defer chunkData.Close()
+
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(resultFile, chunkData); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
 	for i := 0; i < m.WorkerNum; i++ {
 		chunkIdx := i
-		eg.Go(func() error {
-			chunkPath := chunkPath(m.dstDir, m.dstFile, chunkIdx)
-			chunkData, err := os.Open(chunkPath)
-			defer chunkData.Close()
-
-			if err != nil {
-				return errors.Wrapf(err, "cannot read chunk data: %d", chunkIdx)
-			}
-			if _, err := io.Copy(resultFile, chunkData); err != nil {
-				return errors.Wrapf(err, "cannot merge chunk: %d", chunkIdx)
-			}
-
-			return nil
-		})
-	}
-	if err := eg.Wait(); err != nil {
-		return "", errors.Wrapf(err, "error on merge chunk files")
+		chunkPath := chunkPath(m.dstDir, m.dstFile, chunkIdx)
+		if err := mergeFunc(resultFile, chunkPath); err != nil {
+			return "", errors.Wrapf(err, "cannot merge chunk: %d", chunkIdx)
+		}
 	}
 
 	return savedPath, nil
