@@ -1,6 +1,10 @@
-package typinggame
+package typinggame_test
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/gopherdojo/dojo5/kadai3-1/manhdaovan/pkg/typinggame"
+)
 
 func Test_defaultSentencePickFnc(t *testing.T) {
 	type args struct {
@@ -11,6 +15,11 @@ func Test_defaultSentencePickFnc(t *testing.T) {
 		args args
 		want string
 	}{
+		{
+			"nil given",
+			args{nil},
+			"",
+		},
 		{
 			"no sentence given",
 			args{[]string{}},
@@ -24,7 +33,7 @@ func Test_defaultSentencePickFnc(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := defaultSentencePickFnc(tt.args.sentences); got != tt.want {
+			if got := typinggame.DefaultSentencePickFnc(tt.args.sentences); got != tt.want {
 				t.Errorf("defaultSentencePickFnc() = %v, want %v", got, tt.want)
 			}
 		})

@@ -55,8 +55,13 @@ type cliArgs struct {
 
 func (ca *cliArgs) validate() error {
 	if ca.sentencesFile != "" {
-		if _, err := os.Open(ca.sentencesFile); err != nil {
+		f, err := os.Stat(ca.sentencesFile)
+		if err != nil {
 			return errors.Wrap(err, "invalid sample sentences file")
+		}
+
+		if f.IsDir() {
+			return fmt.Errorf("given path is a directory, not a file: %s", ca.sentencesFile)
 		}
 	}
 
@@ -64,7 +69,7 @@ func (ca *cliArgs) validate() error {
 }
 
 func parseCliArgs() *cliArgs {
-	ca := cliArgs{}
+	var ca cliArgs
 
 	flag.Uint64Var(&ca.duration, "t", uint64(30), "duration for game in seconds")
 	flag.StringVar(&ca.sentencesFile, "f", "", "sample sentences file")
@@ -85,10 +90,14 @@ func getSamplesFromFiles(file string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		sentences = append(sentences, scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
 	}
 
 	return sentences, nil

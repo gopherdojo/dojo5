@@ -1,4 +1,4 @@
-package typinggame
+package typinggame_test
 
 import (
 	"bytes"
@@ -6,15 +6,15 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/gopherdojo/dojo5/kadai3-1/manhdaovan/pkg/typinggame"
 )
 
 func TestTypingGame_Start(t *testing.T) {
-	fireTimeoutFnc := func(timeC chan struct{}) {
-		timeC <- struct{}{}
-	}
 	fireSigFnc := func(sigC chan os.Signal) {
 		sigC <- syscall.SIGINT
 	}
@@ -24,28 +24,28 @@ func TestTypingGame_Start(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		fireTimeoutFnc func(timeC chan struct{})
+		fireTimeout    bool
 		fireSigFnc     func(sigC chan os.Signal)
 		fireErrFnc     func(errC chan error)
 		wantExitReason string
 	}{
 		{
 			name:           "exit by timeout",
-			fireTimeoutFnc: fireTimeoutFnc,
+			fireTimeout:    true,
 			fireSigFnc:     nil,
 			fireErrFnc:     nil,
 			wantExitReason: "Time is up!",
 		},
 		{
 			name:           "exit by signal",
-			fireTimeoutFnc: nil,
+			fireTimeout:    false,
 			fireSigFnc:     fireSigFnc,
 			fireErrFnc:     nil,
 			wantExitReason: "Got quit sig: interrupt!",
 		},
 		{
 			name:           "exit by error",
-			fireTimeoutFnc: nil,
+			fireTimeout:    false,
 			fireSigFnc:     nil,
 			fireErrFnc:     fireErrFnc,
 			wantExitReason: "Got error: error while read/write to io",
@@ -54,22 +54,19 @@ func TestTypingGame_Start(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			timeC := make(chan struct{}, 1)
+			ctx, cancel := context.WithCancel(context.Background())
 			sigC := make(chan os.Signal, 2)
 			errC := make(chan error, 3)
-			tg := &TypingGame{
-				Duration:     1 * time.Second,
-				PickSentence: func([]string) string { return "" },
-				textIn:       os.Stdin,
-				textOut:      os.Stdout,
-				timeChan:     timeC,
-				sigChan:      sigC,
-				errChan:      errC,
-			}
+			tg := typinggame.NewTypingGameForTest(ctx, nil,
+				func([]string) string { return "" }, nil,
+				sigC, errC, 1*time.Second,
+				os.Stdin, os.Stdout)
 
+			var wg sync.WaitGroup
+			wg.Add(1) // prevent race condition
 			go func() {
-				if tt.fireTimeoutFnc != nil {
-					tt.fireTimeoutFnc(timeC)
+				if tt.fireTimeout {
+					cancel()
 				}
 				if tt.fireSigFnc != nil {
 					tt.fireSigFnc(sigC)
@@ -77,9 +74,11 @@ func TestTypingGame_Start(t *testing.T) {
 				if tt.fireErrFnc != nil {
 					tt.fireErrFnc(errC)
 				}
+				wg.Done()
 			}()
+			wg.Wait()
 
-			reason := tg.waitExit()
+			reason := tg.WaitExitForTest()
 			if reason != tt.wantExitReason {
 				t.Errorf("TypingGame.Start() = %v, want %v", reason, tt.wantExitReason)
 			}
@@ -120,7 +119,7 @@ func (m *mockReader) Read(p []byte) (int, error) {
 }
 
 func TestTypingGame_CorrectSentences(t *testing.T) {
-	initPicker := func() PickerFnc {
+	initPicker := func() typinggame.PickerFnc {
 		idx := -1
 
 		return func(sentences []string) string {
@@ -145,7 +144,7 @@ func TestTypingGame_CorrectSentences(t *testing.T) {
 		{
 			name: "no corrected sentence",
 			fields: fields{
-				errChan: make(chan error, 2),
+				errChan: make(chan error, 1),
 				textIn:  &mockReader{corrected: 0},
 				textOut: &bytes.Buffer{},
 			},
@@ -154,7 +153,7 @@ func TestTypingGame_CorrectSentences(t *testing.T) {
 		{
 			name: "1 corrected sentence",
 			fields: fields{
-				errChan: make(chan error, 2),
+				errChan: make(chan error, 1),
 				textIn:  &mockReader{corrected: 1},
 				textOut: &bytes.Buffer{},
 			},
@@ -163,7 +162,7 @@ func TestTypingGame_CorrectSentences(t *testing.T) {
 		{
 			name: "2 corrected sentences",
 			fields: fields{
-				errChan: make(chan error, 2),
+				errChan: make(chan error, 1),
 				textIn:  &mockReader{corrected: 2},
 				textOut: &bytes.Buffer{},
 			},
@@ -172,7 +171,7 @@ func TestTypingGame_CorrectSentences(t *testing.T) {
 		{
 			name: "error on io.Reader",
 			fields: fields{
-				errChan: make(chan error, 2),
+				errChan: make(chan error, 1),
 				textIn:  &mockReader{err: fmt.Errorf("error on io.Reader")},
 				textOut: &bytes.Buffer{},
 			},
@@ -181,15 +180,16 @@ func TestTypingGame_CorrectSentences(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tg := &TypingGame{
-				Sentences:    sampleSentence,
-				PickSentence: initPicker(),
-				errChan:      tt.fields.errChan,
-				textIn:       tt.fields.textIn,
-				textOut:      tt.fields.textOut,
-			}
+			ctx := context.Background()
+			tg := typinggame.NewTypingGameForTest(ctx,
+				sampleSentence,
+				initPicker(),
+				nil, nil,
+				tt.fields.errChan, 0,
+				tt.fields.textIn,
+				tt.fields.textOut)
 
-			tg.play(context.Background())
+			tg.PlayForTest(ctx)
 			if got := tg.CorrectSentences(); got != tt.want {
 				t.Errorf("TypingGame.CorrectSentences() = %v, want %v", got, tt.want)
 			}

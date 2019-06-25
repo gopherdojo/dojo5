@@ -23,9 +23,9 @@ type TypingGame struct {
 	PickSentence PickerFnc
 	QuitSigs     []os.Signal
 
-	sigChan  chan os.Signal
-	errChan  chan error
-	timeChan <-chan struct{}
+	sigChan chan os.Signal
+	errChan chan error
+	ctx     context.Context
 
 	textIn  io.Reader
 	textOut io.Writer
@@ -38,7 +38,7 @@ func (tg *TypingGame) Start() string {
 	ctx, cancel := context.WithTimeout(context.Background(), tg.Duration)
 	defer cancel()
 
-	if err := tg.initGame(ctx.Done()); err != nil {
+	if err := tg.initGame(ctx); err != nil {
 		return fmt.Sprintf("Error on init game: %v", err)
 	}
 
@@ -55,7 +55,7 @@ func (tg *TypingGame) CorrectSentences() int {
 func (tg *TypingGame) waitExit() string {
 	var exitReason string
 	select {
-	case <-tg.timeChan:
+	case <-tg.ctx.Done():
 		exitReason = "Time is up!"
 	case sig := <-tg.sigChan:
 		exitReason = fmt.Sprintf("Got quit sig: %s!", sig.String())
@@ -63,19 +63,16 @@ func (tg *TypingGame) waitExit() string {
 		exitReason = fmt.Sprintf("Got error: %v", err)
 	}
 
-	close(tg.sigChan)
-	close(tg.errChan)
-
 	return exitReason
 }
 
-func (tg *TypingGame) initGame(c <-chan struct{}) error {
+func (tg *TypingGame) initGame(ctx context.Context) error {
 	if len(tg.Sentences) == 0 { // no given sample sentences
 		return fmt.Errorf("no sample sentences given")
 	}
 
-	tg.timeChan = c
-	tg.errChan = make(chan error, 2)     // cap for 1 error and closing channel data
+	tg.ctx = ctx
+	tg.errChan = make(chan error, 1)
 	tg.sigChan = make(chan os.Signal, 2) // cap for 1 signal and closing channel data
 
 	tg.textIn = os.Stdin
@@ -93,14 +90,16 @@ func (tg *TypingGame) play(ctx context.Context) {
 
 	for {
 		sampleSentence := tg.PickSentence(tg.Sentences)
-		if err := tg.print([]byte(sampleSentence + "\n")); err != nil {
+		if err := tg.print(sampleSentence + "\n"); err != nil {
 			tg.errChan <- err
+			close(tg.errChan)
 			return
 		}
 
 		if !scanner.Scan() {
 			if err := scanner.Err(); err != nil {
 				tg.errChan <- scanner.Err()
+				close(tg.errChan)
 			}
 			return
 		}
@@ -118,8 +117,8 @@ func (tg *TypingGame) play(ctx context.Context) {
 	}
 }
 
-func (tg *TypingGame) print(sentence []byte) error {
-	_, err := tg.textOut.Write(sentence)
+func (tg *TypingGame) print(sentence string) error {
+	_, err := io.WriteString(tg.textOut, sentence)
 	return err
 }
 
