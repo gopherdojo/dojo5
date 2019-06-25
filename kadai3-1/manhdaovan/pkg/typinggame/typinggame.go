@@ -12,78 +12,71 @@ import (
 )
 
 var defaultSigsQuit = []os.Signal{syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT}
-var defaultSentences = []string{
-	"Joe made the sugar cookies; Susan decorated them.",
-	"There were white out conditions in the town; subsequently, the roads were impassable.",
-	"She folded her handkerchief neatly.",
-	"Two seats were vacant.",
-	"She advised him to come back at once.",
-	"Sometimes, all you need to do is completely make an ass of yourself and laugh it off to realise that life isn’t so bad after all.",
-	"We have a lot of rain in June.",
-	"Rock music approaches at high velocity.",
-	"Everyone was busy, so I went to the movie alone.",
-	"We have never been to Asia, nor have we visited Africa.",
-	"Check back tomorrow; I will see if the book has arrived.",
-	"Wednesday is hump day, but has anyone asked the camel if he’s happy about it?",
-	"The book is in front of the table.",
-	"Let me help you with your baggage.",
-	"Please wait outside of the house.",
-	"She wrote him a long letter, but he didn't read it.",
-	"I want to buy a onesie… but know it won’t suit me.",
-	"Lets all be unique together until we realise we are all the same.",
-	"He told us a very exciting adventure story.",
-	"Yeah, I think it's a good environment for learning English.",
-}
 
+// PickerFnc is method to pick a sentence from sample sentences
 type PickerFnc func(sentences []string) string
 
+// TypingGame represents the game struct
 type TypingGame struct {
-	Duration     uint64 // seconds
+	Duration     time.Duration
 	Sentences    []string
 	PickSentence PickerFnc
 	QuitSigs     []os.Signal
-	doneChan     chan string
-	sigChan      chan os.Signal
-	errChan      chan error
-	textIn       io.Reader
-	textOut      io.Writer
-	correctNum   int
+
+	sigChan  chan os.Signal
+	errChan  chan error
+	timeChan <-chan struct{}
+
+	textIn  io.Reader
+	textOut io.Writer
+
+	correctNum int
 }
 
-func (tg *TypingGame) Start() <-chan string {
-	tg.start()
-	return tg.doneChan
+// Start starts the game
+func (tg *TypingGame) Start() string {
+	ctx, cancel := context.WithTimeout(context.Background(), tg.Duration)
+	defer cancel()
+
+	if err := tg.initGame(ctx.Done()); err != nil {
+		return fmt.Sprintf("Error on init game: %v", err)
+	}
+
+	tg.listenQuitSig()
+	go tg.play(ctx)
+	return tg.waitExit()
 }
 
+// CorrectSentences returns number of corrected sentences from input
 func (tg *TypingGame) CorrectSentences() int {
 	return tg.correctNum
 }
 
-func (tg *TypingGame) start() {
-	tg.initGame()
-	tg.listenQuitSig()
-
-	go tg.play()
-
-	ctx, _ := context.WithTimeout(context.Background(), time.Duration(tg.Duration)*time.Second)
+func (tg *TypingGame) waitExit() string {
+	var exitReason string
 	select {
-	case <-ctx.Done():
-		tg.doneChan <- "Time is up!"
+	case <-tg.timeChan:
+		exitReason = "Time is up!"
 	case sig := <-tg.sigChan:
-		tg.doneChan <- fmt.Sprintf("Got quit sig: %s!", sig.String())
+		exitReason = fmt.Sprintf("Got quit sig: %s!", sig.String())
 	case err := <-tg.errChan:
-		tg.doneChan <- fmt.Sprintf("Got error: %v", err)
+		exitReason = fmt.Sprintf("Got error: %v", err)
 	}
 
-	close(tg.doneChan)
 	close(tg.sigChan)
 	close(tg.errChan)
+
+	return exitReason
 }
 
-func (tg *TypingGame) initGame() {
-	tg.errChan = make(chan error, 1)
-	tg.doneChan = make(chan string, 1)
-	tg.sigChan = make(chan os.Signal, len(tg.QuitSigs)+len(defaultSigsQuit))
+func (tg *TypingGame) initGame(c <-chan struct{}) error {
+	if len(tg.Sentences) == 0 { // no given sample sentences
+		return fmt.Errorf("no sample sentences given")
+	}
+
+	tg.timeChan = c
+	tg.errChan = make(chan error, 2)     // cap for 1 error and closing channel data
+	tg.sigChan = make(chan os.Signal, 2) // cap for 1 signal and closing channel data
 
 	tg.textIn = os.Stdin
 	tg.textOut = os.Stdout
@@ -92,13 +85,12 @@ func (tg *TypingGame) initGame() {
 		tg.PickSentence = defaultSentencePickFnc
 	}
 
-	if len(tg.Sentences) == 0 {
-		tg.Sentences = defaultSentences
-	}
+	return nil
 }
 
-func (tg *TypingGame) play() {
+func (tg *TypingGame) play(ctx context.Context) {
 	scanner := bufio.NewScanner(tg.textIn)
+
 	for {
 		sampleSentence := tg.PickSentence(tg.Sentences)
 		if err := tg.print([]byte(sampleSentence + "\n")); err != nil {
@@ -107,16 +99,19 @@ func (tg *TypingGame) play() {
 		}
 
 		if !scanner.Scan() {
-			tg.errChan <- scanner.Err()
+			if err := scanner.Err(); err != nil {
+				tg.errChan <- scanner.Err()
+			}
 			return
 		}
-		inputSentence := scanner.Bytes()
-		if string(inputSentence) == sampleSentence {
+
+		inputSentence := scanner.Text()
+		if inputSentence == sampleSentence {
 			tg.correctNum++
 		}
 
 		select {
-		case <-tg.doneChan:
+		case <-ctx.Done():
 			return
 		default:
 		}
