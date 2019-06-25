@@ -167,7 +167,7 @@ func (m *MGet) mergeChunks() (string, error) {
 	}
 	defer resultFile.Close()
 
-	mergeFunc := func(srcFile *os.File, chunkPath string) error {
+	mergeChunk := func(srcFile *os.File, chunkPath string) error {
 		chunkData, err := os.Open(chunkPath)
 		defer chunkData.Close()
 
@@ -184,7 +184,7 @@ func (m *MGet) mergeChunks() (string, error) {
 	for i := 0; i < m.WorkerNum; i++ {
 		chunkIdx := i
 		chunkPath := chunkPath(m.dstDir, m.dstFile, chunkIdx)
-		if err := mergeFunc(resultFile, chunkPath); err != nil {
+		if err := mergeChunk(resultFile, chunkPath); err != nil {
 			return "", errors.Wrapf(err, "cannot merge chunk: %d", chunkIdx)
 		}
 	}
@@ -196,13 +196,15 @@ func (m *MGet) shutdown() {
 	close(m.sigChan)
 	close(m.errChan)
 	close(m.doneChan)
-
-	// for chunkIdx := 0; chunkIdx < m.WorkerNum; chunkIdx++ {
-	// 	chunkPath := chunkPath(m.dstDir, m.dstFile, chunkIdx)
-	// 	if err := os.Remove(chunkPath); err != nil {
-	// 		fmt.Fprintln(os.Stderr, "error on remove chunk %s data: %v", chunkPath, err)
-	// 	}
-	// }
-
+	m.cleanChunks()
 	fmt.Println("shutdowned")
+}
+
+func (m *MGet) cleanChunks() {
+	for chunkIdx := 0; chunkIdx < m.WorkerNum; chunkIdx++ {
+		chunkPath := chunkPath(m.dstDir, m.dstFile, chunkIdx)
+		if err := os.Remove(chunkPath); err != nil {
+			fmt.Fprintln(os.Stderr, "error on remove chunk %s data: %v", chunkPath, err)
+		}
+	}
 }
