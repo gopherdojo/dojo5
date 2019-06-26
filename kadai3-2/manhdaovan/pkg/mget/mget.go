@@ -16,14 +16,16 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-var defaultExitSigs = []os.Signal{syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT}
+// DefaultExitSigs is default signals that make this tool exit
+var DefaultExitSigs = []os.Signal{syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT}
 
 // MGet represents struct of downloader
 type MGet struct {
-	WorkerNum int
-	ExitSigs  []os.Signal
-	UserAgent string
-	Referer   string
+	workerNum  uint
+	exitSigs   []os.Signal
+	UserAgent  string
+	Referer    string
+	httpClient *http.Client
 
 	dstDir  string
 	dstFile string
@@ -33,33 +35,48 @@ type MGet struct {
 	doneChan chan struct{}
 }
 
-// Download returns downloaded file path and error of downloading
+// NewMGet inits new MGet
+func NewMGet(httpClient *http.Client, workers uint, exitSigs []os.Signal, userAgent, referer string) *MGet {
+	m := &MGet{
+		workerNum:  workers,
+		exitSigs:   exitSigs,
+		UserAgent:  userAgent,
+		Referer:    referer,
+		httpClient: httpClient,
+	}
+	m.init()
+	return m
+}
+
+// Download returns downloaded file path and error of downloading.
 func (m *MGet) Download(ctx context.Context, dst, url string) (string, error) {
-	m.init(dst, url)
+	m.setDirAndFileName(dst, url)
 	defer m.shutdown()
 	return m.download(ctx, url)
 }
 
-func (m *MGet) init(dstPath, url string) {
+func (m *MGet) init() {
+	if len(m.exitSigs) == 0 { // no signal given
+		m.exitSigs = DefaultExitSigs
+	}
+	m.errChan = make(chan error, 2)     // cap for one error and closing
+	m.doneChan = make(chan struct{}, 2) // cap for one struct{} and closing
+	m.sigChan = make(chan os.Signal, 2) // cap for one sig and closing
+	signal.Notify(m.sigChan, m.exitSigs...)
+}
+
+func (m *MGet) setDirAndFileName(dstPath, url string) {
 	m.dstDir, m.dstFile = parseDirAndFileName(dstPath)
 	if m.dstFile == "" { // dstPath is a directory, no custom file name given
 		m.dstFile = parseFileName(url)
 	}
-	if len(m.ExitSigs) == 0 { // no signal given
-		m.ExitSigs = defaultExitSigs
-	}
-
-	m.errChan = make(chan error, 2)     // cap for one error and closing
-	m.doneChan = make(chan struct{}, 2) // cap for one struct{} and closing
-	m.sigChan = make(chan os.Signal, 2) // cap for one sig and closing
-	signal.Notify(m.sigChan, m.ExitSigs...)
 }
 
 func (m *MGet) download(ctx context.Context, url string) (savedFilePath string, err error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	res, err := ctxhttp.Head(ctx, http.DefaultClient, url)
+	res, err := ctxhttp.Head(ctx, m.httpClient, url)
 	if err != nil {
 		err = errors.Wrap(err, "failed to head request: "+url)
 		return
@@ -67,7 +84,7 @@ func (m *MGet) download(ctx context.Context, url string) (savedFilePath string, 
 
 	if res.Header.Get("Accept-Ranges") != "bytes" {
 		fmt.Println("[WARN]: server not support concurrency downloading")
-		m.WorkerNum = 1
+		m.workerNum = 1
 	}
 
 	fileSize, err := strconv.ParseUint(res.Header.Get("Content-Length"), 10, 64)
@@ -76,15 +93,14 @@ func (m *MGet) download(ctx context.Context, url string) (savedFilePath string, 
 		return
 	}
 
-	chunkSize := fileSize / uint64(m.WorkerNum)
-	if (fileSize % uint64(m.WorkerNum)) != 0 {
-		m.WorkerNum++ // recalculate workers to fit with chunks
+	chunkSize := fileSize / uint64(m.workerNum)
+	if (fileSize % uint64(m.workerNum)) != 0 {
+		m.workerNum++ // recalculate workers to fit with chunks
 	}
-	fmt.Printf("wokers --------- %+v, %d, %d\n", m, chunkSize, fileSize)
 
 	go func() {
 		eg, ctx := errgroup.WithContext(ctx)
-		for i := 0; i < m.WorkerNum; i++ {
+		for i := 0; i < int(m.workerNum); i++ {
 			chunk := newChunkInfo(i, url, fileSize, chunkSize)
 			eg.Go(func() error {
 				return m.downloadChunk(ctx, chunk)
@@ -120,10 +136,8 @@ func (m *MGet) download(ctx context.Context, url string) (savedFilePath string, 
 }
 
 func (m *MGet) downloadChunk(ctx context.Context, chunk *chunkInfo) error {
-	fmt.Printf("chunk --------- %+v\n", chunk)
-
 	// create get request
-	req, err := http.NewRequest("GET", chunk.url, nil)
+	req, err := http.NewRequest(http.MethodGet, chunk.url, nil)
 	if err != nil {
 		return errors.Wrapf(err, "failed to init NewRequest for chunk: %d", chunk.idx)
 	}
@@ -139,7 +153,7 @@ func (m *MGet) downloadChunk(ctx context.Context, chunk *chunkInfo) error {
 		req.Header.Set("Referer", m.Referer)
 	}
 
-	res, reqErr := ctxhttp.Do(ctx, http.DefaultClient, req)
+	res, reqErr := ctxhttp.Do(ctx, m.httpClient, req)
 	if reqErr != nil {
 		return errors.Wrapf(reqErr, "cannot get data for chunk %d", chunk.idx)
 	}
@@ -181,7 +195,7 @@ func (m *MGet) mergeChunks() (string, error) {
 		return nil
 	}
 
-	for i := 0; i < m.WorkerNum; i++ {
+	for i := 0; i < int(m.workerNum); i++ {
 		chunkIdx := i
 		chunkPath := chunkPath(m.dstDir, m.dstFile, chunkIdx)
 		if err := mergeChunk(resultFile, chunkPath); err != nil {
@@ -197,14 +211,13 @@ func (m *MGet) shutdown() {
 	close(m.errChan)
 	close(m.doneChan)
 	m.cleanChunks()
-	fmt.Println("shutdowned")
 }
 
 func (m *MGet) cleanChunks() {
-	for chunkIdx := 0; chunkIdx < m.WorkerNum; chunkIdx++ {
+	for chunkIdx := 0; chunkIdx < int(m.workerNum); chunkIdx++ {
 		chunkPath := chunkPath(m.dstDir, m.dstFile, chunkIdx)
 		if err := os.Remove(chunkPath); err != nil {
-			fmt.Fprintln(os.Stderr, "error on remove chunk %s data: %v", chunkPath, err)
+			fmt.Fprintf(os.Stderr, "error on remove chunk %s data: %v\n", chunkPath, err)
 		}
 	}
 }
