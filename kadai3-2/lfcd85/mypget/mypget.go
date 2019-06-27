@@ -72,18 +72,17 @@ func (d *Downloader) Execute(ctx context.Context) error {
 	}
 	defer os.RemoveAll(tempDir)
 
-	err = d.downloadByRanges(ctx, tempDir)
-	if err != nil {
+	if err := d.downloadByRanges(ctx, tempDir); err != nil {
 		return err
 	}
 
-	err = d.combine(tempDir)
-	if err != nil {
+	if err := d.combine(tempDir); err != nil {
 		return err
 	}
+
 	fmt.Printf("Download completed! saved at: %v\n", d.outputPath)
 
-	return err
+	return nil
 }
 
 func acceptBytesRanges(resp *http.Response) bool {
@@ -129,8 +128,7 @@ func (d *Downloader) downloadByRanges(ctx context.Context, tempDir string) error
 			}
 			defer resp.Body.Close()
 
-			err = validateStatusPartialContent(resp)
-			if err != nil {
+			if err := validateStatusPartialContent(resp); err != nil {
 				return err
 			}
 
@@ -143,8 +141,10 @@ func (d *Downloader) downloadByRanges(ctx context.Context, tempDir string) error
 			}
 			defer f.Close()
 
-			_, err = io.Copy(f, resp.Body)
-			return err
+			if _, err = io.Copy(f, resp.Body); err != nil {
+				return err
+			}
+			return nil
 		})
 	}
 	return eg.Wait()

@@ -26,8 +26,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = mypget.New(url, *splitNum).Execute()
-	if err != nil {
+	if err := mypget.New(url, *splitNum).Execute(nil); err != nil {
 		fmt.Fprintln(os.Stderr, "error: ", err)
 		os.Exit(1)
 	}

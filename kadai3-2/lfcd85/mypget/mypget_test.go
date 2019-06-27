@@ -59,8 +59,7 @@ func deleteOutputFile(t *testing.T, d *mypget.Downloader) {
 
 	outputPath := d.ExportOutputPath()
 	if outputPath != "" {
-		err := os.Remove(outputPath)
-		if err != nil {
+		if err := os.Remove(outputPath); err != nil {
 			t.Errorf("failed to remove output file: %v", err)
 		}
 	}
