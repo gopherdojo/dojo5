@@ -38,12 +38,14 @@ func New(url *url.URL, splitNum int) *Downloader {
 }
 
 // Execute do the split download.
-func (d *Downloader) Execute() error {
-	bc := context.Background()
-	ctx, cancel := context.WithCancel(bc)
+func (d *Downloader) Execute(ctx context.Context) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	req, err := http.NewRequest("GET", d.url.String(), nil)
+	req, err := http.NewRequest(http.MethodGet, d.url.String(), nil)
 	if err != nil {
 		return err
 	}
@@ -109,7 +111,7 @@ func (d *Downloader) splitToRanges(length int) {
 }
 
 func (d *Downloader) downloadByRanges(ctx context.Context, tempDir string) error {
-	var eg errgroup.Group
+	eg, ctx := errgroup.WithContext(ctx)
 
 	for i, r := range d.ranges {
 		i, r := i, r
@@ -179,6 +181,7 @@ func (d *Downloader) combine(tempDir string) error {
 		}
 
 		_, err = io.Copy(f, partial)
+		partial.Close()
 		if err != nil {
 			return err
 		}

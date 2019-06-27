@@ -4,7 +4,6 @@ build:
 PHONY: fmt
 fmt:
 	go fmt ./...
-	go vet ./...
 
 PHONY: check
 check:

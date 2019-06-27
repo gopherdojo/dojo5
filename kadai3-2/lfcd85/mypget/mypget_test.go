@@ -35,7 +35,7 @@ func TestDownloader_Execute(t *testing.T) {
 			defer closeTs()
 
 			d := initDownloader(t, ts.URL, c.splitNum)
-			if err := d.Execute(); err != nil {
+			if err := d.Execute(nil); err != nil {
 				t.Errorf("failed to execute split downloader: %v", err)
 			}
 			deleteOutputFile(t, d)
@@ -115,5 +115,8 @@ func (tsf *testServerFile) testServerHandler(t *testing.T, w http.ResponseWriter
 
 	w.Header().Set("Content-Length", strconv.Itoa(len(body)))
 	w.WriteHeader(http.StatusPartialContent)
-	w.Write(body)
+
+	if _, err := w.Write(body); err != nil {
+		t.Errorf("failed to write the response body in test server: %v", err)
+	}
 }
