@@ -1,4 +1,5 @@
 BIN := godl
+GOCOV := coverageprofile
 
 .PHONY: build
 build:
@@ -12,3 +13,9 @@ clean:
 .PHONY: test
 test: build
 	go test -race -v
+
+.PHONY: cover
+cover: build
+	go test -race ./... -coverprofile=$(GOCOV)
+	go tool cover -html=$(GOCOV)
+	rm $(GOCOV)
