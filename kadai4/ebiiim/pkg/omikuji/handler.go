@@ -3,6 +3,7 @@ package omikuji
 import (
 	"fmt"
 	"html"
+	"html/template"
 	"net/http"
 )
 
@@ -29,6 +30,25 @@ func (ks *KujiServer) NamedKuji(w http.ResponseWriter, r *http.Request) {
 		name = "名無し"
 	}
 	_, err := fmt.Fprintf(w, "%sさんの本日の運勢は「%s」です！", name, ks.kuji.Do())
+	if err != nil {
+		// TODO: handles error
+	}
+}
+
+var tmpl = template.Must(template.New("NamedKuji").Parse("<html><body>{{.Name}}さんの本日の運勢は「<b>{{.Kuji}}</b>」です！"))
+
+func (ks *KujiServer) TmplNamedKuji(w http.ResponseWriter, r *http.Request) {
+	name := html.EscapeString(r.FormValue("name"))
+	if name == "" {
+		name = "名無し"
+	}
+	err := tmpl.Execute(w, struct {
+		Name string
+		Kuji string
+	}{
+		Name: name,
+		Kuji: ks.kuji.Do(),
+	})
 	if err != nil {
 		// TODO: handles error
 	}
