@@ -14,7 +14,7 @@ func main() {
 	kuji := omikuji.NewSimpleOmikuji(rand.New(rand.NewSource(time.Now().UnixNano())))
 	kujiServer := omikuji.NewKujiServer(kuji)
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", kujiServer.Handler)
+	mux.HandleFunc("/", kujiServer.NamedKuji)
 	err := http.ListenAndServe(":8888", mux)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to start the server %v", err)
