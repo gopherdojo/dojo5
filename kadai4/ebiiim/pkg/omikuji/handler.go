@@ -35,7 +35,7 @@ func (ks *KujiServer) NamedKuji(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var tmpl = template.Must(template.New("NamedKuji").Parse("<html><body>{{.Name}}さんの本日の運勢は「<b>{{.Kuji}}</b>」です！"))
+var tmpl = template.Must(template.New("NamedKuji").Parse("<html><body>{{.Name}}さんの本日の運勢は「<b>{{.Kuji}}</b>」です！\n"))
 
 func (ks *KujiServer) TmplNamedKuji(w http.ResponseWriter, r *http.Request) {
 	name := html.EscapeString(r.FormValue("name"))
